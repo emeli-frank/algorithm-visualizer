@@ -1,9 +1,9 @@
 part of 'dijkstra_graph_bloc.dart';
 
 class DijkstraGraphState extends Equatable {
-  DijkstraGraphState({List<Offset>? vertices}) : vertices = vertices ?? [];
+  DijkstraGraphState({List<Vertex>? vertex}) : vertices = vertex ?? [];
 
-  final List<Offset> vertices;
+  final List<Vertex> vertices;
 
   @override
   List<Object?> get props => [vertices];

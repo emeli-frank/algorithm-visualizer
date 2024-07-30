@@ -1,5 +1,6 @@
 import 'package:algorithm_visualizer/features/dijkstra/bloc/dijkstra_graph_bloc.dart';
 import 'package:algorithm_visualizer/features/dijkstra/cubit/dijkstra_tool_selection_cubit.dart';
+import 'package:algorithm_visualizer/features/dijkstra/models/vertex.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -69,12 +70,52 @@ class AppBar extends StatelessWidget {
   }
 }
 
-class DijkstraCanvas extends StatelessWidget {
+class DijkstraCanvas extends StatefulWidget {
   const DijkstraCanvas({super.key});
+
+  @override
+  _DijkstraCanvasState createState() => _DijkstraCanvasState();
+}
+
+class _DijkstraCanvasState extends State<DijkstraCanvas> {
+  Vertex? _draggedVertex;
+  Offset? _dragStartOffset;
+  Vertex? _vertexStartOffset;
 
   void _addVertex(BuildContext context, Offset offset) {
     var graphBloc = context.read<DijkstraGraphBloc>();
-    graphBloc.add(DijkstraGraphVerticesAdded(vertices: offset));
+    var vertex = Vertex.fromOffset(id: Vertex.generateID(), offset: offset);
+    graphBloc.add(DijkstraGraphVerticesAdded(vertex: vertex));
+  }
+
+  void _startDraggingVertex(Offset offset, List<Vertex> vertices) {
+    for (var vertex in vertices) {
+      if ((vertex.toOffset() - offset).distance <= 25.0) {
+        _draggedVertex = vertex;
+        _dragStartOffset = offset;
+        _vertexStartOffset = vertex;
+        break;
+      }
+    }
+  }
+
+  void _updateVertexPosition(Offset offset) {
+    if (_draggedVertex != null && _dragStartOffset != null && _vertexStartOffset != null) {
+      final dx = offset.dx - _dragStartOffset!.dx;
+      final dy = offset.dy - _dragStartOffset!.dy;
+      setState(() {
+        // _draggedVertex = Offset(_vertexStartOffset!.dx + dx, _vertexStartOffset!.dy + dy);
+        _draggedVertex = Vertex(id: _vertexStartOffset!.id, dx: _vertexStartOffset!.dx + dx, dy: _vertexStartOffset!.dy + dy);
+      });
+      context.read<DijkstraGraphBloc>().add(DijkstraGraphVerticesUpdated(vertex: _draggedVertex!));
+      // context.read<DijkstraGraphBloc>().add(DijkstraGraphVerticesAdded(vertex: _draggedVertex!));
+    }
+  }
+
+  void _endDraggingVertex() {
+    _draggedVertex = null;
+    _dragStartOffset = null;
+    _vertexStartOffset = null;
   }
 
   @override
@@ -84,9 +125,21 @@ class DijkstraCanvas extends StatelessWidget {
         onTapUp: (details) {
           _addVertex(context, details.localPosition);
         },
+        onPanStart: (details) {
+          _startDraggingVertex(details.localPosition, context.read<DijkstraGraphBloc>().state.vertices);
+        },
+        onPanUpdate: (details) {
+          _updateVertexPosition(details.localPosition);
+        },
+        onPanEnd: (details) {
+          _endDraggingVertex();
+        },
         child: CustomPaint(
           size: Size.infinite,
-          painter: VertexPainter(context.watch<DijkstraGraphBloc>().state.vertices),
+          painter: VertexPainter(
+            context.watch<DijkstraGraphBloc>().state.vertices
+                .map((Vertex vertex) => vertex.toOffset()).toList(),
+          ),
         ),
       ),
     );

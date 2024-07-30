@@ -6,7 +6,13 @@ sealed class DijkstraGraphEvent extends Equatable {
 }
 
 final class DijkstraGraphVerticesAdded extends DijkstraGraphEvent {
-  DijkstraGraphVerticesAdded({required this.vertices});
+  DijkstraGraphVerticesAdded({required this.vertex});
 
-  final Offset vertices;
+  final Vertex vertex;
+}
+
+final class DijkstraGraphVerticesUpdated extends DijkstraGraphEvent {
+  DijkstraGraphVerticesUpdated({required this.vertex});
+
+  final Vertex vertex;
 }
