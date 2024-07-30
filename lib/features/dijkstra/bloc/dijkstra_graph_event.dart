@@ -16,3 +16,14 @@ final class DijkstraGraphVerticesUpdated extends DijkstraGraphEvent {
 
   final Vertex vertex;
 }
+
+final class DijkstraGraphVerticesMoved extends DijkstraGraphEvent {
+  DijkstraGraphVerticesMoved({required this.draggedVertex, required this.dragStartOffset});
+
+  final Vertex draggedVertex;
+  final Offset dragStartOffset;
+}
+
+final class DijkstraGraphVerticesDragStopped extends DijkstraGraphEvent {
+  DijkstraGraphVerticesDragStopped();
+}

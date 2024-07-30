@@ -70,17 +70,10 @@ class AppBar extends StatelessWidget {
   }
 }
 
-class DijkstraCanvas extends StatefulWidget {
+class DijkstraCanvas extends StatelessWidget {
   const DijkstraCanvas({super.key});
 
-  @override
-  _DijkstraCanvasState createState() => _DijkstraCanvasState();
-}
-
-class _DijkstraCanvasState extends State<DijkstraCanvas> {
-  Vertex? _draggedVertex;
-  Offset? _dragStartOffset;
-  var vertexRadius = 25.0;
+  final vertexRadius = 25.0;
 
   void _addVertex(BuildContext context, Offset offset) {
     var graphBloc = context.read<DijkstraGraphBloc>();
@@ -88,29 +81,29 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
     graphBloc.add(DijkstraGraphVerticesAdded(vertex: vertex));
   }
 
-  void _startDraggingVertex(Offset offset, List<Vertex> vertices) {
+  void _startDraggingVertex(BuildContext context, Offset offset, List<Vertex> vertices) {
     for (var vertex in vertices) {
       if ((vertex.toOffset() - offset).distance <= vertexRadius) {
-        _draggedVertex = vertex;
-        _dragStartOffset = offset;
+        context.read<DijkstraGraphBloc>().add(DijkstraGraphVerticesMoved(draggedVertex: vertex, dragStartOffset: offset));
         break;
       }
     }
   }
 
-  void _updateVertexPosition(Offset offset) {
-    if (_draggedVertex != null && _dragStartOffset != null) {
-      final dx = offset.dx - _dragStartOffset!.dx;
-      final dy = offset.dy - _dragStartOffset!.dy;
+  void _updateVertexPosition(BuildContext context, Offset offset) {
+    var graphBloc = context.read<DijkstraGraphBloc>();
 
-      var updatedVertex = Vertex(id: _draggedVertex!.id, dx: _draggedVertex!.toOffset().dx + dx, dy: _draggedVertex!.toOffset().dy + dy);
-      context.read<DijkstraGraphBloc>().add(DijkstraGraphVerticesUpdated(vertex: updatedVertex));
+    if (graphBloc.state.isDragging) {
+      final dx = offset.dx - graphBloc.state.dragStartOffset!.dx;
+      final dy = offset.dy - graphBloc.state.dragStartOffset!.dy;
+
+      var updatedVertex = Vertex(id: graphBloc.state.draggedVertex!.id, dx: graphBloc.state.dragStartOffset!.dx + dx, dy: graphBloc.state.dragStartOffset!.dy + dy);
+      graphBloc.add(DijkstraGraphVerticesUpdated(vertex: updatedVertex));
     }
   }
 
-  void _endDraggingVertex() {
-    _draggedVertex = null;
-    _dragStartOffset = null;
+  void _endDraggingVertex(BuildContext context) {
+    context.read<DijkstraGraphBloc>().add(DijkstraGraphVerticesDragStopped());
   }
 
   @override
@@ -121,13 +114,13 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
           _addVertex(context, details.localPosition);
         },
         onPanStart: (details) {
-          _startDraggingVertex(details.localPosition, context.read<DijkstraGraphBloc>().state.vertices);
+          _startDraggingVertex(context, details.localPosition, context.read<DijkstraGraphBloc>().state.vertices);
         },
         onPanUpdate: (details) {
-          _updateVertexPosition(details.localPosition);
+          _updateVertexPosition(context, details.localPosition);
         },
         onPanEnd: (details) {
-          _endDraggingVertex();
+          _endDraggingVertex(context);
         },
         child: CustomPaint(
           size: Size.infinite,
