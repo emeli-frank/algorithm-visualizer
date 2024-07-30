@@ -1,8 +1,8 @@
 import 'package:algorithm_visualizer/features/a_star/views/a_star_visualizer.dart';
+import 'package:algorithm_visualizer/features/dijkstra/bloc/dijkstra_graph_bloc.dart';
 import 'package:algorithm_visualizer/features/dijkstra/cubit/dijkstra_tool_selection_cubit.dart';
 import 'package:algorithm_visualizer/features/dijkstra/views/dijkstra_screen.dart';
 import 'package:algorithm_visualizer/features/sidebar/views/sidebar.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -40,6 +40,9 @@ class MyApp extends StatelessWidget {
                   create: (_) => DijkstraToolSelectionCubit(
                     const DijkstraToolSelectionState(),
                   ),
+                ),
+                BlocProvider<DijkstraGraphBloc>(
+                  create: (_) => DijkstraGraphBloc(),
                 ),
               ],
               child: const DijkstraScreen(),

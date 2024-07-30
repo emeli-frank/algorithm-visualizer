@@ -1,3 +1,4 @@
+import 'package:algorithm_visualizer/features/dijkstra/bloc/dijkstra_graph_bloc.dart';
 import 'package:algorithm_visualizer/features/dijkstra/cubit/dijkstra_tool_selection_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -71,9 +72,47 @@ class AppBar extends StatelessWidget {
 class DijkstraCanvas extends StatelessWidget {
   const DijkstraCanvas({super.key});
 
+  void _addVertex(BuildContext context, Offset offset) {
+    var graphBloc = context.read<DijkstraGraphBloc>();
+    graphBloc.add(DijkstraGraphVerticesAdded(vertices: offset));
+  }
+
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Expanded(
+      child: GestureDetector(
+        onTapUp: (details) {
+          _addVertex(context, details.localPosition);
+        },
+        child: CustomPaint(
+          size: Size.infinite,
+          painter: VertexPainter(context.watch<DijkstraGraphBloc>().state.vertices),
+        ),
+      ),
+    );
+  }
+}
+
+class VertexPainter extends CustomPainter {
+  final List<Offset> vertices;
+  final double vertexRadius = 25.0;
+
+  VertexPainter(this.vertices);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.blue
+      ..style = PaintingStyle.fill;
+
+    for (var vertex in vertices) {
+      canvas.drawCircle(vertex, vertexRadius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(VertexPainter oldDelegate) {
+    return oldDelegate.vertices != vertices;
   }
 }
 
