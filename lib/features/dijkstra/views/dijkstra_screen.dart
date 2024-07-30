@@ -80,7 +80,7 @@ class DijkstraCanvas extends StatefulWidget {
 class _DijkstraCanvasState extends State<DijkstraCanvas> {
   Vertex? _draggedVertex;
   Offset? _dragStartOffset;
-  Vertex? _vertexStartOffset;
+  var vertexRadius = 25.0;
 
   void _addVertex(BuildContext context, Offset offset) {
     var graphBloc = context.read<DijkstraGraphBloc>();
@@ -90,32 +90,27 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
 
   void _startDraggingVertex(Offset offset, List<Vertex> vertices) {
     for (var vertex in vertices) {
-      if ((vertex.toOffset() - offset).distance <= 25.0) {
+      if ((vertex.toOffset() - offset).distance <= vertexRadius) {
         _draggedVertex = vertex;
         _dragStartOffset = offset;
-        _vertexStartOffset = vertex;
         break;
       }
     }
   }
 
   void _updateVertexPosition(Offset offset) {
-    if (_draggedVertex != null && _dragStartOffset != null && _vertexStartOffset != null) {
+    if (_draggedVertex != null && _dragStartOffset != null) {
       final dx = offset.dx - _dragStartOffset!.dx;
       final dy = offset.dy - _dragStartOffset!.dy;
-      setState(() {
-        // _draggedVertex = Offset(_vertexStartOffset!.dx + dx, _vertexStartOffset!.dy + dy);
-        _draggedVertex = Vertex(id: _vertexStartOffset!.id, dx: _vertexStartOffset!.dx + dx, dy: _vertexStartOffset!.dy + dy);
-      });
-      context.read<DijkstraGraphBloc>().add(DijkstraGraphVerticesUpdated(vertex: _draggedVertex!));
-      // context.read<DijkstraGraphBloc>().add(DijkstraGraphVerticesAdded(vertex: _draggedVertex!));
+
+      var updatedVertex = Vertex(id: _draggedVertex!.id, dx: _draggedVertex!.toOffset().dx + dx, dy: _draggedVertex!.toOffset().dy + dy);
+      context.read<DijkstraGraphBloc>().add(DijkstraGraphVerticesUpdated(vertex: updatedVertex));
     }
   }
 
   void _endDraggingVertex() {
     _draggedVertex = null;
     _dragStartOffset = null;
-    _vertexStartOffset = null;
   }
 
   @override
@@ -137,8 +132,9 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
         child: CustomPaint(
           size: Size.infinite,
           painter: VertexPainter(
-            context.watch<DijkstraGraphBloc>().state.vertices
+            vertices: context.watch<DijkstraGraphBloc>().state.vertices
                 .map((Vertex vertex) => vertex.toOffset()).toList(),
+            vertexRadius: vertexRadius,
           ),
         ),
       ),
@@ -147,10 +143,10 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
 }
 
 class VertexPainter extends CustomPainter {
-  final List<Offset> vertices;
-  final double vertexRadius = 25.0;
+  VertexPainter({required this.vertexRadius, required this.vertices});
 
-  VertexPainter(this.vertices);
+  final List<Offset> vertices;
+  final double vertexRadius;
 
   @override
   void paint(Canvas canvas, Size size) {
