@@ -102,11 +102,17 @@ class VertexPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.blue
+      ..color = Colors.white
       ..style = PaintingStyle.fill;
+
+    final borderPaint = Paint()
+      ..color = Colors.blue
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4;
 
     for (var vertex in vertices) {
       canvas.drawCircle(vertex, vertexRadius, paint);
+      canvas.drawCircle(vertex, vertexRadius, borderPaint);
     }
   }
 
