@@ -2,6 +2,7 @@ import 'package:algorithm_visualizer/features/dijkstra/bloc/dijkstra_graph_bloc.
 import 'package:algorithm_visualizer/features/dijkstra/cubit/dijkstra_tool_selection_cubit.dart';
 import 'package:algorithm_visualizer/features/dijkstra/models/vertex.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DijkstraScreen extends StatelessWidget {
@@ -31,13 +32,15 @@ class AppBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          IconButton(
+          ToolBarButtons(
             onPressed: () {},
-            icon: Icon(Icons.undo),
+            iconData: Icons.undo,
+            tooltip: 'Undo (Ctrl + Z)',
           ),
-          IconButton(
+          ToolBarButtons(
             onPressed: () {},
-            icon: const Icon(Icons.redo),
+            iconData: Icons.redo,
+            tooltip: 'Redo (Ctrl + Shift + Z)',
           ),
           ToolBarButtons(
             onPressed: () {
@@ -45,6 +48,7 @@ class AppBar extends StatelessWidget {
             },
             iconData: Icons.pan_tool_outlined,
             isActive: cubit.state.selection == DijkstraTools.pan,
+            tooltip: 'Move',
           ),
           ToolBarButtons(
             onPressed: () {
@@ -52,6 +56,7 @@ class AppBar extends StatelessWidget {
             },
             iconData: Icons.device_hub_outlined,
             isActive: cubit.state.selection == DijkstraTools.vertices,
+            tooltip: 'Add Vertex',
           ),
           ToolBarButtons(
             onPressed: () {
@@ -59,10 +64,12 @@ class AppBar extends StatelessWidget {
             },
             iconData: Icons.linear_scale_outlined,
             isActive: cubit.state.selection == DijkstraTools.edge,
+            tooltip: 'Add Edge',
           ),
-          IconButton(
+          ToolBarButtons(
             onPressed: () {},
-            icon: const Icon(Icons.info_outline),
+            iconData: Icons.info_outline,
+            tooltip: 'Algorithm Info',
           ),
         ],
       ),
@@ -108,26 +115,56 @@ class DijkstraCanvas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var toolSelectionCubit = context.watch<DijkstraToolSelectionCubit>();
+    SystemMouseCursor cursor = SystemMouseCursors.basic;
+    Function(TapUpDetails)? onTapHandler;
+    Function(DragStartDetails)? onPanStartHandler;
+    Function(DragUpdateDetails)? onPanUpdateHandler;
+    Function(DragEndDetails)? onPanEndHandler;
+
+    if (toolSelectionCubit.state.selection == DijkstraTools.vertices) {
+      onTapHandler = (details) {
+        _addVertex(context, details.localPosition);
+      };
+
+      cursor = SystemMouseCursors.precise;
+    }
+
+    if (toolSelectionCubit.state.selection == DijkstraTools.pan) {
+      onPanStartHandler = (details) {
+        _startDraggingVertex(context, details.localPosition, context.read<DijkstraGraphBloc>().state.vertices);
+      };
+
+      onPanUpdateHandler = (details) {
+        _updateVertexPosition(context, details.localPosition);
+      };
+
+      onPanEndHandler = (details) {
+        _endDraggingVertex(context);
+      };
+
+      cursor = SystemMouseCursors.grab;
+
+      if (context.watch<DijkstraGraphBloc>().state.isDragging) {
+        cursor = SystemMouseCursors.grabbing;
+      }
+    }
+
     return Expanded(
       child: GestureDetector(
-        onTapUp: (details) {
-          _addVertex(context, details.localPosition);
-        },
-        onPanStart: (details) {
-          _startDraggingVertex(context, details.localPosition, context.read<DijkstraGraphBloc>().state.vertices);
-        },
-        onPanUpdate: (details) {
-          _updateVertexPosition(context, details.localPosition);
-        },
-        onPanEnd: (details) {
-          _endDraggingVertex(context);
-        },
-        child: CustomPaint(
-          size: Size.infinite,
-          painter: VertexPainter(
-            vertices: context.watch<DijkstraGraphBloc>().state.vertices
-                .map((Vertex vertex) => vertex.toOffset()).toList(),
-            vertexRadius: vertexRadius,
+        onTapUp: onTapHandler,
+        onPanStart: onPanStartHandler,
+        onPanUpdate: onPanUpdateHandler,
+        onPanEnd: onPanEndHandler,
+        child: MouseRegion(
+          cursor: cursor,
+          child: CustomPaint(
+            size: Size.infinite,
+            painter: VertexPainter(
+              vertices: context.watch<DijkstraGraphBloc>().state.vertices
+                  .map((Vertex vertex) => vertex.toOffset()).toList(),
+              vertexRadius: vertexRadius,
+            ),
           ),
         ),
       ),
@@ -165,11 +202,12 @@ class VertexPainter extends CustomPainter {
 }
 
 class ToolBarButtons extends StatelessWidget {
-  const ToolBarButtons({super.key, required this.iconData, this.onPressed, this.isActive});
+  const ToolBarButtons({super.key, required this.iconData, this.onPressed, this.isActive, required this.tooltip});
 
   final IconData iconData;
   final Function()? onPressed;
   final bool? isActive;
+  final String tooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -177,6 +215,7 @@ class ToolBarButtons extends StatelessWidget {
 
     return IconButton(
       onPressed: onPressed,
+      tooltip: tooltip,
       icon: Icon(
         iconData,
         color: color,
