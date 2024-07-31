@@ -1,5 +1,6 @@
 import 'package:algorithm_visualizer/features/dijkstra/bloc/dijkstra_graph_bloc.dart';
 import 'package:algorithm_visualizer/features/dijkstra/cubit/dijkstra_tool_selection_cubit.dart';
+import 'package:algorithm_visualizer/features/dijkstra/models/edge.dart';
 import 'package:algorithm_visualizer/features/dijkstra/models/vertex.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,7 +11,7 @@ class DijkstraScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       children: [
         AppBar(),
         DijkstraCanvas(),
@@ -77,10 +78,17 @@ class AppBar extends StatelessWidget {
   }
 }
 
-class DijkstraCanvas extends StatelessWidget {
+class DijkstraCanvas extends StatefulWidget {
   const DijkstraCanvas({super.key});
 
+  @override
+  State<DijkstraCanvas> createState() => _DijkstraCanvasState();
+}
+
+class _DijkstraCanvasState extends State<DijkstraCanvas> {
   final vertexRadius = 25.0;
+  Offset? _temporaryEdgeEnd;
+  Offset? _startVertex;
 
   void _addVertex(BuildContext context, Offset offset) {
     var graphBloc = context.read<DijkstraGraphBloc>();
@@ -100,7 +108,7 @@ class DijkstraCanvas extends StatelessWidget {
   void _updateVertexPosition(BuildContext context, Offset offset) {
     var graphBloc = context.read<DijkstraGraphBloc>();
 
-    if (graphBloc.state.isDragging) {
+    if (graphBloc.state.isDraggingVertex) {
       final dx = offset.dx - graphBloc.state.dragStartOffset!.dx;
       final dy = offset.dy - graphBloc.state.dragStartOffset!.dy;
 
@@ -111,6 +119,38 @@ class DijkstraCanvas extends StatelessWidget {
 
   void _endDraggingVertex(BuildContext context) {
     context.read<DijkstraGraphBloc>().add(DijkstraGraphVerticesDragStopped());
+  }
+
+  void _startDrawingEdge(Offset offset, List<Offset> vertices) {
+    for (var vertex in vertices) {
+      if ((vertex - offset).distance <= 25.0) {
+        _startVertex = vertex;
+        break;
+      }
+    }
+  }
+
+  void _updateTemporaryEdge(Offset offset) {
+    setState(() {
+      _temporaryEdgeEnd = offset;
+    });
+  }
+
+  void _endDrawingEdge(Offset offset, List<Offset> vertices) {
+    if (_startVertex != null) {
+      for (var vertex in vertices) {
+        if ((vertex - offset).distance <= 25.0) {
+          var edge = Edge(id: Edge.generateID(), start: _startVertex!, end: vertex);
+          context.read<DijkstraGraphBloc>().add(DijkstraGraphEdgeAdded(edge: edge));
+          break;
+        }
+      }
+    }
+
+    setState(() {
+      _temporaryEdgeEnd = null;
+      _startVertex = null;
+    });
   }
 
   @override
@@ -145,9 +185,25 @@ class DijkstraCanvas extends StatelessWidget {
 
       cursor = SystemMouseCursors.grab;
 
-      if (context.watch<DijkstraGraphBloc>().state.isDragging) {
+      if (context.watch<DijkstraGraphBloc>().state.isDraggingVertex) {
         cursor = SystemMouseCursors.grabbing;
       }
+    }
+
+    if (toolSelectionCubit.state.selection == DijkstraTools.edge) {
+      cursor = SystemMouseCursors.click;
+
+      onPanStartHandler = (details) {
+        _startDrawingEdge(details.localPosition, context.read<DijkstraGraphBloc>().state.vertices.map((Vertex vertex) => vertex.toOffset()).toList());
+      };
+
+      onPanUpdateHandler = (details) {
+        _updateTemporaryEdge(details.localPosition);
+      };
+
+      onPanEndHandler = (details) {
+        _endDrawingEdge(details.localPosition, context.read<DijkstraGraphBloc>().state.vertices.map((Vertex vertex) => vertex.toOffset()).toList());
+      };
     }
 
     return Expanded(
@@ -163,7 +219,10 @@ class DijkstraCanvas extends StatelessWidget {
             painter: VertexPainter(
               vertices: context.watch<DijkstraGraphBloc>().state.vertices
                   .map((Vertex vertex) => vertex.toOffset()).toList(),
+              edges: context.watch<DijkstraGraphBloc>().state.edges,
               vertexRadius: vertexRadius,
+              temporaryEdgeEnd: _temporaryEdgeEnd,
+              startVertex: _startVertex,
             ),
           ),
         ),
@@ -173,10 +232,13 @@ class DijkstraCanvas extends StatelessWidget {
 }
 
 class VertexPainter extends CustomPainter {
-  VertexPainter({required this.vertexRadius, required this.vertices});
+  VertexPainter({required this.vertexRadius, required this.vertices, required this.edges, this.temporaryEdgeEnd, this.startVertex});
 
   final List<Offset> vertices;
+  final List<Edge> edges;
   final double vertexRadius;
+  final Offset? temporaryEdgeEnd;
+  final Offset? startVertex;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -193,11 +255,26 @@ class VertexPainter extends CustomPainter {
       canvas.drawCircle(vertex, vertexRadius, paint);
       canvas.drawCircle(vertex, vertexRadius, borderPaint);
     }
+
+    final edgePaint = Paint()
+      ..color = Colors.black
+      ..strokeWidth = 2;
+
+    for (var edge in edges) {
+      canvas.drawLine(edge.start, edge.end, edgePaint);
+    }
+
+    if (startVertex != null && temporaryEdgeEnd != null) {
+      canvas.drawLine(startVertex!, temporaryEdgeEnd!, edgePaint..color = Colors.grey);
+    }
   }
 
   @override
   bool shouldRepaint(VertexPainter oldDelegate) {
-    return oldDelegate.vertices != vertices;
+    return oldDelegate.vertices != vertices ||
+        oldDelegate.edges != edges ||
+        oldDelegate.temporaryEdgeEnd != temporaryEdgeEnd ||
+        oldDelegate.startVertex != startVertex;
   }
 }
 

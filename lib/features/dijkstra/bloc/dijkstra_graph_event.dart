@@ -27,3 +27,9 @@ final class DijkstraGraphVerticesMoved extends DijkstraGraphEvent {
 final class DijkstraGraphVerticesDragStopped extends DijkstraGraphEvent {
   DijkstraGraphVerticesDragStopped();
 }
+
+final class DijkstraGraphEdgeAdded extends DijkstraGraphEvent {
+  DijkstraGraphEdgeAdded({required this.edge});
+
+  final Edge edge;
+}

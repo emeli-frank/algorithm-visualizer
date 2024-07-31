@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:algorithm_visualizer/features/dijkstra/models/edge.dart';
 import 'package:algorithm_visualizer/features/dijkstra/models/vertex.dart';
 import 'package:algorithm_visualizer/models/optional.dart';
 import 'package:equatable/equatable.dart';
@@ -35,6 +36,13 @@ class DijkstraGraphBloc extends Bloc<DijkstraGraphEvent, DijkstraGraphState> {
 
     on<DijkstraGraphVerticesDragStopped>((DijkstraGraphVerticesDragStopped event, Emitter<DijkstraGraphState> emit) {
       emit(state.copyWith(draggedVertex: const Optional<Vertex?>(null), dragStartOffset: const Optional<Offset?>(null)));
+    });
+
+    on<DijkstraGraphEdgeAdded>((DijkstraGraphEdgeAdded event, Emitter<DijkstraGraphState> emit) {
+      var edgesCopy = [...state.edges];
+      edgesCopy.add(event.edge);
+
+      emit(state.copyWith(edges: edgesCopy));
     });
   }
 }
