@@ -11,14 +11,16 @@ part 'dijkstra_graph_event.dart';
 
 class DijkstraGraphBloc extends Bloc<DijkstraGraphEvent, DijkstraGraphState> {
   DijkstraGraphBloc() : super(DijkstraGraphState()) {
-    on<DijkstraGraphVerticesAdded>((DijkstraGraphVerticesAdded event, Emitter<DijkstraGraphState> emit) {
+    // Adds a new vertex
+    on<VerticesAdded>((VerticesAdded event, Emitter<DijkstraGraphState> emit) {
       var verticesCopy = [...state.vertices];
       verticesCopy.add(event.vertex);
 
       emit(state.copyWith(vertices: verticesCopy));
     });
 
-    on<DijkstraGraphVerticesUpdated>((DijkstraGraphVerticesUpdated event, Emitter<DijkstraGraphState> emit) {
+    // Updates (the position of) an existing vertex while dragging
+    on<VerticesUpdated>((VerticesUpdated event, Emitter<DijkstraGraphState> emit) {
       var verticesCopy = [...state.vertices];
       for (var i = 0; i < verticesCopy.length; i++) {
         if (verticesCopy[i].id == event.vertex.id) {
@@ -30,15 +32,45 @@ class DijkstraGraphBloc extends Bloc<DijkstraGraphEvent, DijkstraGraphState> {
       emit(state.copyWith(vertices: verticesCopy));
     });
 
-    on<DijkstraGraphVerticesMoved>((DijkstraGraphVerticesMoved event, Emitter<DijkstraGraphState> emit) {
-      emit(state.copyWith(draggedVertex: Optional<Vertex>(event.draggedVertex), dragStartOffset: Optional<Offset>(event.dragStartOffset)));
+    // Saves the info of the vertex that is currently being dragged
+    on<StartVertexDragging>((StartVertexDragging event, Emitter<DijkstraGraphState> emit) {
+      emit(state.copyWith(
+        draggedVertexID: Optional<String>(event.draggedVertexID),
+        dragStartOffset: Optional<Offset>(event.dragStartOffset),
+      ));
     });
 
-    on<DijkstraGraphVerticesDragStopped>((DijkstraGraphVerticesDragStopped event, Emitter<DijkstraGraphState> emit) {
-      emit(state.copyWith(draggedVertex: const Optional<Vertex?>(null), dragStartOffset: const Optional<Offset?>(null)));
+    // Resets the info of the vertex being dragged after the dragging is completed
+    on<CompleteVertexDragging>((
+      CompleteVertexDragging event,
+      Emitter<DijkstraGraphState> emit,
+    ) {
+      emit(state.copyWith(
+        draggedVertexID: const Optional<String?>(null),
+        dragStartOffset: const Optional<Offset?>(null),
+      ));
     });
 
-    on<DijkstraGraphEdgeAdded>((DijkstraGraphEdgeAdded event, Emitter<DijkstraGraphState> emit) {
+    // Saves the vertex where the edge drawing started
+    on<StartEdgeDrawing>((StartEdgeDrawing event, Emitter<DijkstraGraphState> emit) {
+      emit(state.copyWith(startVertex: Optional<Offset>(event.startVertex)));
+    });
+
+    // Updates the position of the temporary edge end
+    on<UpdateTemporaryEdge>((UpdateTemporaryEdge event, Emitter<DijkstraGraphState> emit) {
+      emit(state.copyWith(temporaryEdgeEnd: Optional<Offset>(event.temporaryEdgeEnd)));
+    });
+
+    // Resets the start vertex and the temporary edge end after the edge drawing is completed
+    on<CompleteEdgeDrawing>((CompleteEdgeDrawing event, Emitter<DijkstraGraphState> emit) {
+      emit(state.copyWith(
+        startVertex: const Optional<Offset?>(null),
+        temporaryEdgeEnd: const Optional<Offset?>(null),
+      ));
+    });
+
+    // Adds a new edge after the drawing is completed
+    on<EdgeAdded>((EdgeAdded event, Emitter<DijkstraGraphState> emit) {
       var edgesCopy = [...state.edges];
       edgesCopy.add(event.edge);
 

@@ -5,31 +5,45 @@ sealed class DijkstraGraphEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-final class DijkstraGraphVerticesAdded extends DijkstraGraphEvent {
-  DijkstraGraphVerticesAdded({required this.vertex});
+final class VerticesAdded extends DijkstraGraphEvent {
+  VerticesAdded({required this.vertex});
 
   final Vertex vertex;
 }
 
-final class DijkstraGraphVerticesUpdated extends DijkstraGraphEvent {
-  DijkstraGraphVerticesUpdated({required this.vertex});
+final class VerticesUpdated extends DijkstraGraphEvent {
+  VerticesUpdated({required this.vertex});
 
   final Vertex vertex;
 }
 
-final class DijkstraGraphVerticesMoved extends DijkstraGraphEvent {
-  DijkstraGraphVerticesMoved({required this.draggedVertex, required this.dragStartOffset});
+final class StartVertexDragging extends DijkstraGraphEvent {
+  StartVertexDragging({required this.draggedVertexID, required this.dragStartOffset});
 
-  final Vertex draggedVertex;
+  final String draggedVertexID;
   final Offset dragStartOffset;
 }
 
-final class DijkstraGraphVerticesDragStopped extends DijkstraGraphEvent {
-  DijkstraGraphVerticesDragStopped();
+final class CompleteVertexDragging extends DijkstraGraphEvent {
+  CompleteVertexDragging();
 }
 
-final class DijkstraGraphEdgeAdded extends DijkstraGraphEvent {
-  DijkstraGraphEdgeAdded({required this.edge});
+final class EdgeAdded extends DijkstraGraphEvent {
+  EdgeAdded({required this.edge});
 
   final Edge edge;
 }
+
+final class StartEdgeDrawing extends DijkstraGraphEvent {
+  StartEdgeDrawing({required this.startVertex});
+
+  final Offset startVertex;
+}
+
+final class UpdateTemporaryEdge extends DijkstraGraphEvent {
+  UpdateTemporaryEdge({required this.temporaryEdgeEnd});
+
+  final Offset temporaryEdgeEnd;
+}
+
+final class CompleteEdgeDrawing extends DijkstraGraphEvent {}

@@ -31,72 +31,74 @@ class DijkstraCanvas extends StatefulWidget {
 
 class _DijkstraCanvasState extends State<DijkstraCanvas> {
   final vertexRadius = 25.0;
-  Offset? _temporaryEdgeEnd;
-  Offset? _startVertex;
 
   void _addVertex(BuildContext context, Offset offset) {
     var graphBloc = context.read<DijkstraGraphBloc>();
     var vertex = Vertex.fromOffset(id: Vertex.generateID(), offset: offset);
-    graphBloc.add(DijkstraGraphVerticesAdded(vertex: vertex));
+    graphBloc.add(VerticesAdded(vertex: vertex));
   }
 
   void _startDraggingVertex(BuildContext context, Offset offset, List<Vertex> vertices) {
     for (var vertex in vertices) {
       if ((vertex.toOffset() - offset).distance <= vertexRadius) {
-        context.read<DijkstraGraphBloc>().add(DijkstraGraphVerticesMoved(draggedVertex: vertex, dragStartOffset: offset));
+        context.read<DijkstraGraphBloc>().add(StartVertexDragging(draggedVertexID: vertex.id, dragStartOffset: offset));
         break;
       }
     }
   }
 
+  // Update the position of the vertex that is being dragged
   void _updateVertexPosition(BuildContext context, Offset offset) {
     var graphBloc = context.read<DijkstraGraphBloc>();
 
     if (graphBloc.state.isDraggingVertex) {
+      // Get the difference between the current offset and the initial offset
       final dx = offset.dx - graphBloc.state.dragStartOffset!.dx;
       final dy = offset.dy - graphBloc.state.dragStartOffset!.dy;
 
-      var updatedVertex = Vertex(id: graphBloc.state.draggedVertex!.id, dx: graphBloc.state.dragStartOffset!.dx + dx, dy: graphBloc.state.dragStartOffset!.dy + dy);
-      graphBloc.add(DijkstraGraphVerticesUpdated(vertex: updatedVertex));
+      // Create a new vertex with the updated position
+      var updatedVertex = Vertex(
+        id: graphBloc.state.draggedVertexID!,
+        dx: graphBloc.state.dragStartOffset!.dx + dx,
+        dy: graphBloc.state.dragStartOffset!.dy + dy,
+      );
+
+      graphBloc.add(VerticesUpdated(vertex: updatedVertex));
     }
   }
 
   void _endDraggingVertex(BuildContext context) {
-    context.read<DijkstraGraphBloc>().add(DijkstraGraphVerticesDragStopped());
+    context.read<DijkstraGraphBloc>().add(CompleteVertexDragging());
   }
 
   // Set start vertex for edge drawing
   void _startDrawingEdge(Offset offset, List<Offset> vertices) {
     for (var vertex in vertices) {
       if ((vertex - offset).distance <= vertexRadius) {
-        _startVertex = vertex;
+        context.read<DijkstraGraphBloc>().add(StartEdgeDrawing(startVertex: vertex));
         break;
       }
     }
   }
 
   void _updateTemporaryEdge(Offset offset) {
-    setState(() {
-      _temporaryEdgeEnd = offset;
-    });
+    context.read<DijkstraGraphBloc>().add(UpdateTemporaryEdge(temporaryEdgeEnd: offset));
   }
 
   // Save edge if tracing ends on a vertex
   void _endDrawingEdge(Offset offset, List<Offset> vertices) {
-    if (_startVertex != null) {
+    final startVertex = context.read<DijkstraGraphBloc>().state.startVertex;
+    if (startVertex != null) {
       for (var vertex in vertices) {
         if ((vertex - offset).distance <= vertexRadius) {
-          var edge = Edge(id: Edge.generateID(), start: _startVertex!, end: vertex);
-          context.read<DijkstraGraphBloc>().add(DijkstraGraphEdgeAdded(edge: edge));
+          var edge = Edge(id: Edge.generateID(), start: startVertex, end: vertex);
+          context.read<DijkstraGraphBloc>().add(EdgeAdded(edge: edge));
           break;
         }
       }
     }
 
-    setState(() {
-      _temporaryEdgeEnd = null;
-      _startVertex = null;
-    });
+    context.read<DijkstraGraphBloc>().add(CompleteEdgeDrawing());
   }
 
   @override
@@ -166,8 +168,8 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
               vertices: context.watch<DijkstraGraphBloc>().state.vertices,
               edges: context.watch<DijkstraGraphBloc>().state.edges,
               vertexRadius: vertexRadius,
-              temporaryEdgeEnd: _temporaryEdgeEnd,
-              startVertex: _startVertex,
+              temporaryEdgeEnd: context.watch<DijkstraGraphBloc>().state.temporaryEdgeEnd,
+              startVertex: context.watch<DijkstraGraphBloc>().state.startVertex,
             ),
           ),
         ),
