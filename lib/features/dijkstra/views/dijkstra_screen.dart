@@ -34,13 +34,13 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
 
   void _addVertex(BuildContext context, Offset offset) {
     var graphBloc = context.read<DijkstraGraphBloc>();
-    var vertex = Vertex.fromOffset(id: Vertex.generateID(), offset: offset);
+    var vertex = Vertex(id: Vertex.generateID(), offset: offset);
     graphBloc.add(VerticesAdded(vertex: vertex));
   }
 
   void _startDraggingVertex(BuildContext context, Offset offset, List<Vertex> vertices) {
     for (var vertex in vertices) {
-      if ((vertex.toOffset() - offset).distance <= vertexRadius) {
+      if ((vertex.offset - offset).distance <= vertexRadius) {
         context.read<DijkstraGraphBloc>().add(StartVertexDragging(draggedVertexID: vertex.id, dragStartOffset: offset));
         break;
       }
@@ -59,8 +59,10 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
       // Create a new vertex with the updated position
       var updatedVertex = Vertex(
         id: graphBloc.state.draggedVertexID!,
-        dx: graphBloc.state.dragStartOffset!.dx + dx,
-        dy: graphBloc.state.dragStartOffset!.dy + dy,
+        offset: Offset(
+          graphBloc.state.dragStartOffset!.dx + dx,
+          graphBloc.state.dragStartOffset!.dy + dy,
+        ),
       );
 
       graphBloc.add(VerticesUpdated(vertex: updatedVertex));
@@ -142,7 +144,7 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
       cursor = SystemMouseCursors.click;
 
       onPanStartHandler = (details) {
-        _startDrawingEdge(details.localPosition, context.read<DijkstraGraphBloc>().state.vertices.map((Vertex vertex) => vertex.toOffset()).toList());
+        _startDrawingEdge(details.localPosition, context.read<DijkstraGraphBloc>().state.vertices.map((Vertex vertex) => vertex.offset).toList());
       };
 
       onPanUpdateHandler = (details) {
@@ -150,7 +152,7 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
       };
 
       onPanEndHandler = (details) {
-        _endDrawingEdge(details.localPosition, context.read<DijkstraGraphBloc>().state.vertices.map((Vertex vertex) => vertex.toOffset()).toList());
+        _endDrawingEdge(details.localPosition, context.read<DijkstraGraphBloc>().state.vertices.map((Vertex vertex) => vertex.offset).toList());
       };
     }
 
@@ -164,7 +166,7 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
           cursor: cursor,
           child: CustomPaint(
             size: Size.infinite,
-            painter: VertexPainter(
+            painter: GraphPainter(
               vertices: context.watch<DijkstraGraphBloc>().state.vertices,
               edges: context.watch<DijkstraGraphBloc>().state.edges,
               vertexRadius: vertexRadius,
@@ -178,8 +180,8 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
   }
 }
 
-class VertexPainter extends CustomPainter {
-  VertexPainter({
+class GraphPainter extends CustomPainter {
+  GraphPainter({
     required this.vertexRadius,
     required this.vertices,
     required this.edges,
@@ -219,13 +221,13 @@ class VertexPainter extends CustomPainter {
       ..strokeWidth = 4;
 
     for (var vertex in vertices) {
-      canvas.drawCircle(vertex.toOffset(), vertexRadius, vertexPaint);
-      canvas.drawCircle(vertex.toOffset(), vertexRadius, vertexBorderPaint);
+      canvas.drawCircle(vertex.offset, vertexRadius, vertexPaint);
+      canvas.drawCircle(vertex.offset, vertexRadius, vertexBorderPaint);
     }
   }
 
   @override
-  bool shouldRepaint(VertexPainter oldDelegate) {
+  bool shouldRepaint(GraphPainter oldDelegate) {
     return oldDelegate.vertices != vertices ||
         oldDelegate.edges != edges ||
         oldDelegate.temporaryEdgeEnd != temporaryEdgeEnd ||

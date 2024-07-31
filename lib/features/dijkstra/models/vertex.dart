@@ -4,22 +4,13 @@ import 'dart:ui';
 import 'package:equatable/equatable.dart';
 
 class Vertex extends Equatable {
-  const Vertex({required this.id, required this.dx, required this.dy});
-
-  factory Vertex.fromOffset({required String id, required Offset offset}) {
-    return Vertex(id: id, dx: offset.dx, dy: offset.dy);
-  }
+  const Vertex({required this.id, required this.offset});
 
   final String id;
-  final double dx;
-  final double dy;
+  final Offset offset;
 
   @override
-  List<Object> get props => [id, dx, dy];
-
-  Offset toOffset() {
-    return Offset(dx, dy);
-  }
+  List<Object> get props => [id, offset];
 
   static String generateID() {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
