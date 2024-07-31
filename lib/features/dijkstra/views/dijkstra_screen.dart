@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+part 'dijkstra_appbar.dart';
+
 class DijkstraScreen extends StatelessWidget {
   const DijkstraScreen({super.key});
 
@@ -16,64 +18,6 @@ class DijkstraScreen extends StatelessWidget {
         AppBar(),
         DijkstraCanvas(),
       ],
-    );
-  }
-}
-
-class AppBar extends StatelessWidget {
-  const AppBar({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    var cubit = context.watch<DijkstraToolSelectionCubit>();
-
-    return Container(
-      color: Colors.white,
-      height: 54.0,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          ToolBarButtons(
-            onPressed: () {},
-            iconData: Icons.undo,
-            tooltip: 'Undo (Ctrl + Z)',
-          ),
-          ToolBarButtons(
-            onPressed: () {},
-            iconData: Icons.redo,
-            tooltip: 'Redo (Ctrl + Shift + Z)',
-          ),
-          ToolBarButtons(
-            onPressed: () {
-              cubit.setSelection(DijkstraTools.pan);
-            },
-            iconData: Icons.pan_tool_outlined,
-            isActive: cubit.state.selection == DijkstraTools.pan,
-            tooltip: 'Move',
-          ),
-          ToolBarButtons(
-            onPressed: () {
-              cubit.setSelection(DijkstraTools.vertices);
-            },
-            iconData: Icons.device_hub_outlined,
-            isActive: cubit.state.selection == DijkstraTools.vertices,
-            tooltip: 'Add Vertex',
-          ),
-          ToolBarButtons(
-            onPressed: () {
-              cubit.setSelection(DijkstraTools.edge);
-            },
-            iconData: Icons.linear_scale_outlined,
-            isActive: cubit.state.selection == DijkstraTools.edge,
-            tooltip: 'Add Edge',
-          ),
-          ToolBarButtons(
-            onPressed: () {},
-            iconData: Icons.info_outline,
-            tooltip: 'Algorithm Info',
-          ),
-        ],
-      ),
     );
   }
 }
@@ -121,9 +65,10 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
     context.read<DijkstraGraphBloc>().add(DijkstraGraphVerticesDragStopped());
   }
 
+  // Set start vertex for edge drawing
   void _startDrawingEdge(Offset offset, List<Offset> vertices) {
     for (var vertex in vertices) {
-      if ((vertex - offset).distance <= 25.0) {
+      if ((vertex - offset).distance <= vertexRadius) {
         _startVertex = vertex;
         break;
       }
@@ -136,10 +81,11 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
     });
   }
 
+  // Save edge if tracing ends on a vertex
   void _endDrawingEdge(Offset offset, List<Offset> vertices) {
     if (_startVertex != null) {
       for (var vertex in vertices) {
-        if ((vertex - offset).distance <= 25.0) {
+        if ((vertex - offset).distance <= vertexRadius) {
           var edge = Edge(id: Edge.generateID(), start: _startVertex!, end: vertex);
           context.read<DijkstraGraphBloc>().add(DijkstraGraphEdgeAdded(edge: edge));
           break;
@@ -217,8 +163,7 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
           child: CustomPaint(
             size: Size.infinite,
             painter: VertexPainter(
-              vertices: context.watch<DijkstraGraphBloc>().state.vertices
-                  .map((Vertex vertex) => vertex.toOffset()).toList(),
+              vertices: context.watch<DijkstraGraphBloc>().state.vertices,
               edges: context.watch<DijkstraGraphBloc>().state.edges,
               vertexRadius: vertexRadius,
               temporaryEdgeEnd: _temporaryEdgeEnd,
@@ -232,9 +177,15 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
 }
 
 class VertexPainter extends CustomPainter {
-  VertexPainter({required this.vertexRadius, required this.vertices, required this.edges, this.temporaryEdgeEnd, this.startVertex});
+  VertexPainter({
+    required this.vertexRadius,
+    required this.vertices,
+    required this.edges,
+    this.temporaryEdgeEnd,
+    this.startVertex,
+  });
 
-  final List<Offset> vertices;
+  final List<Vertex> vertices;
   final List<Edge> edges;
   final double vertexRadius;
   final Offset? temporaryEdgeEnd;
@@ -242,20 +193,7 @@ class VertexPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-
-    final borderPaint = Paint()
-      ..color = Colors.blue
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4;
-
-    for (var vertex in vertices) {
-      canvas.drawCircle(vertex, vertexRadius, paint);
-      canvas.drawCircle(vertex, vertexRadius, borderPaint);
-    }
-
+    // Draw edges
     final edgePaint = Paint()
       ..color = Colors.black
       ..strokeWidth = 2;
@@ -267,6 +205,21 @@ class VertexPainter extends CustomPainter {
     if (startVertex != null && temporaryEdgeEnd != null) {
       canvas.drawLine(startVertex!, temporaryEdgeEnd!, edgePaint..color = Colors.grey);
     }
+
+    // Draw vertices
+    final vertexPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final vertexBorderPaint = Paint()
+      ..color = Colors.blue
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4;
+
+    for (var vertex in vertices) {
+      canvas.drawCircle(vertex.toOffset(), vertexRadius, vertexPaint);
+      canvas.drawCircle(vertex.toOffset(), vertexRadius, vertexBorderPaint);
+    }
   }
 
   @override
@@ -275,28 +228,5 @@ class VertexPainter extends CustomPainter {
         oldDelegate.edges != edges ||
         oldDelegate.temporaryEdgeEnd != temporaryEdgeEnd ||
         oldDelegate.startVertex != startVertex;
-  }
-}
-
-class ToolBarButtons extends StatelessWidget {
-  const ToolBarButtons({super.key, required this.iconData, this.onPressed, this.isActive, required this.tooltip});
-
-  final IconData iconData;
-  final Function()? onPressed;
-  final bool? isActive;
-  final String tooltip;
-
-  @override
-  Widget build(BuildContext context) {
-    var color = (isActive != null && isActive == true) ? Colors.deepOrange : Colors.black54; // todo:: get from theme data
-
-    return IconButton(
-      onPressed: onPressed,
-      tooltip: tooltip,
-      icon: Icon(
-        iconData,
-        color: color,
-      ),
-    );
   }
 }
