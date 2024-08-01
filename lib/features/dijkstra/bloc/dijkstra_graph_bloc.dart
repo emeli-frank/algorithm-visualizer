@@ -53,7 +53,7 @@ class DijkstraGraphBloc extends Bloc<DijkstraGraphEvent, DijkstraGraphState> {
 
     // Saves the vertex where the edge drawing started
     on<StartEdgeDrawing>((StartEdgeDrawing event, Emitter<DijkstraGraphState> emit) {
-      emit(state.copyWith(startVertex: Optional<Offset>(event.startVertex)));
+      emit(state.copyWith(startVertexOffset: Optional<Offset>(event.startVertexOffset)));
     });
 
     // Updates the position of the temporary edge end
@@ -64,7 +64,7 @@ class DijkstraGraphBloc extends Bloc<DijkstraGraphEvent, DijkstraGraphState> {
     // Resets the start vertex and the temporary edge end after the edge drawing is completed
     on<CompleteEdgeDrawing>((CompleteEdgeDrawing event, Emitter<DijkstraGraphState> emit) {
       emit(state.copyWith(
-        startVertex: const Optional<Offset?>(null),
+        startVertexOffset: const Optional<Offset?>(null),
         temporaryEdgeEnd: const Optional<Offset?>(null),
       ));
     });

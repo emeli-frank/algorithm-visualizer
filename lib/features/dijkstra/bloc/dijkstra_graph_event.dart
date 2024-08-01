@@ -35,9 +35,9 @@ final class EdgeAdded extends DijkstraGraphEvent {
 }
 
 final class StartEdgeDrawing extends DijkstraGraphEvent {
-  StartEdgeDrawing({required this.startVertex});
+  StartEdgeDrawing({required this.startVertexOffset});
 
-  final Offset startVertex;
+  final Offset startVertexOffset;
 }
 
 final class UpdateTemporaryEdge extends DijkstraGraphEvent {

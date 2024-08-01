@@ -7,7 +7,7 @@ class DijkstraGraphState extends Equatable {
     this.draggedVertexID,
     this.dragStartOffset,
     this.temporaryEdgeEnd,
-    this.startVertex,
+    this.startVertexOffset,
   })  : vertices = vertices ?? [],
         edges = edges ?? [];
 
@@ -24,12 +24,12 @@ class DijkstraGraphState extends Equatable {
   final Offset? temporaryEdgeEnd;
 
   // Represents the offset of the vertex where the dragging started
-  final Offset? startVertex;
+  final Offset? startVertexOffset;
 
   bool get isDraggingVertex => draggedVertexID != null && dragStartOffset != null;
 
   @override
-  List<Object?> get props => [vertices, edges, draggedVertexID, dragStartOffset, temporaryEdgeEnd, startVertex];
+  List<Object?> get props => [vertices, edges, draggedVertexID, dragStartOffset, temporaryEdgeEnd, startVertexOffset];
 
   DijkstraGraphState copyWith({
     List<Vertex>? vertices,
@@ -37,7 +37,7 @@ class DijkstraGraphState extends Equatable {
     Optional<String?>? draggedVertexID,
     Optional<Offset?>? dragStartOffset,
     Optional<Offset?>? temporaryEdgeEnd,
-    Optional<Offset?>? startVertex,
+    Optional<Offset?>? startVertexOffset,
   }) {
     return DijkstraGraphState(
       vertices: vertices ?? this.vertices,
@@ -45,7 +45,7 @@ class DijkstraGraphState extends Equatable {
       draggedVertexID: draggedVertexID == null ? this.draggedVertexID : draggedVertexID.value,
       dragStartOffset: dragStartOffset == null ? this.dragStartOffset : dragStartOffset.value,
       temporaryEdgeEnd: temporaryEdgeEnd == null ? this.temporaryEdgeEnd : temporaryEdgeEnd.value,
-      startVertex: startVertex == null ? this.startVertex : startVertex.value,
+      startVertexOffset: startVertexOffset == null ? this.startVertexOffset : startVertexOffset.value,
     );
   }
 }

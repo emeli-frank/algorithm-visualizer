@@ -2,6 +2,7 @@ import 'package:algorithm_visualizer/features/dijkstra/bloc/dijkstra_graph_bloc.
 import 'package:algorithm_visualizer/features/dijkstra/cubit/dijkstra_tool_selection_cubit.dart';
 import 'package:algorithm_visualizer/features/dijkstra/models/edge.dart';
 import 'package:algorithm_visualizer/features/dijkstra/models/vertex.dart';
+import 'package:algorithm_visualizer/utils/extensions/offset_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -40,7 +41,7 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
 
   void _startDraggingVertex(BuildContext context, Offset offset, List<Vertex> vertices) {
     for (var vertex in vertices) {
-      if ((vertex.offset - offset).distance <= vertexRadius) {
+      if (vertex.offset.isWithinRadius(offset, vertexRadius)) {
         context.read<DijkstraGraphBloc>().add(StartVertexDragging(draggedVertexID: vertex.id, dragStartOffset: offset));
         break;
       }
@@ -74,10 +75,10 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
   }
 
   // Set start vertex for edge drawing
-  void _startDrawingEdge(Offset offset, List<Offset> vertices) {
+  void _startDrawingEdge(Offset offset, List<Vertex> vertices) {
     for (var vertex in vertices) {
-      if ((vertex - offset).distance <= vertexRadius) {
-        context.read<DijkstraGraphBloc>().add(StartEdgeDrawing(startVertex: vertex));
+      if (vertex.offset.isWithinRadius(offset, vertexRadius)) {
+        context.read<DijkstraGraphBloc>().add(StartEdgeDrawing(startVertexOffset: vertex.offset));
         break;
       }
     }
@@ -88,12 +89,12 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
   }
 
   // Save edge if tracing ends on a vertex
-  void _endDrawingEdge(Offset offset, List<Offset> vertices) {
-    final startVertex = context.read<DijkstraGraphBloc>().state.startVertex;
+  void _endDrawingEdge(Offset offset, List<Vertex> vertices) {
+    final startVertex = context.read<DijkstraGraphBloc>().state.startVertexOffset;
     if (startVertex != null) {
       for (var vertex in vertices) {
-        if ((vertex - offset).distance <= vertexRadius) {
-          var edge = Edge(id: Edge.generateID(), start: startVertex, end: vertex);
+        if (vertex.offset.isWithinRadius(offset, vertexRadius)) {
+          var edge = Edge(id: Edge.generateID(), start: startVertex, end: vertex.offset);
           context.read<DijkstraGraphBloc>().add(EdgeAdded(edge: edge));
           break;
         }
@@ -144,7 +145,7 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
       cursor = SystemMouseCursors.click;
 
       onPanStartHandler = (details) {
-        _startDrawingEdge(details.localPosition, context.read<DijkstraGraphBloc>().state.vertices.map((Vertex vertex) => vertex.offset).toList());
+        _startDrawingEdge(details.localPosition, context.read<DijkstraGraphBloc>().state.vertices);
       };
 
       onPanUpdateHandler = (details) {
@@ -152,7 +153,7 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
       };
 
       onPanEndHandler = (details) {
-        _endDrawingEdge(details.localPosition, context.read<DijkstraGraphBloc>().state.vertices.map((Vertex vertex) => vertex.offset).toList());
+        _endDrawingEdge(details.localPosition, context.read<DijkstraGraphBloc>().state.vertices);
       };
     }
 
@@ -171,7 +172,7 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
               edges: context.watch<DijkstraGraphBloc>().state.edges,
               vertexRadius: vertexRadius,
               temporaryEdgeEnd: context.watch<DijkstraGraphBloc>().state.temporaryEdgeEnd,
-              startVertex: context.watch<DijkstraGraphBloc>().state.startVertex,
+              startVertex: context.watch<DijkstraGraphBloc>().state.startVertexOffset,
             ),
           ),
         ),
