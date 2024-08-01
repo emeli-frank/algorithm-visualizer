@@ -1,9 +1,9 @@
-part of 'dijkstra_tool_selection_cubit.dart';
+part of 'tool_selection_cubit.dart';
 
 enum DijkstraTools { pan, vertices, edge }
 
-final class DijkstraToolSelectionState extends Equatable {
-  const DijkstraToolSelectionState({
+final class ToolSelectionState extends Equatable {
+  const ToolSelectionState({
     this.selection = DijkstraTools.pan,
   });
 

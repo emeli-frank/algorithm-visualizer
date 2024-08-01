@@ -1,6 +1,6 @@
-import 'package:algorithm_visualizer/features/a_star/views/a_star_visualizer.dart';
-import 'package:algorithm_visualizer/features/dijkstra/bloc/dijkstra_graph_bloc.dart';
-import 'package:algorithm_visualizer/features/dijkstra/cubit/dijkstra_tool_selection_cubit.dart';
+import 'package:algorithm_visualizer/features/a_star/views/a_star_screen.dart';
+import 'package:algorithm_visualizer/features/dijkstra/bloc/graph_bloc.dart';
+import 'package:algorithm_visualizer/features/dijkstra/cubit/tool_selection_cubit.dart';
 import 'package:algorithm_visualizer/features/dijkstra/views/dijkstra_screen.dart';
 import 'package:algorithm_visualizer/features/sidebar/views/sidebar.dart';
 import 'package:flutter/material.dart';
@@ -36,13 +36,13 @@ class MyApp extends StatelessWidget {
             parentNavigatorKey: _shellNavigatorKey,
             builder: (context, state) => MultiBlocProvider(
               providers: [
-                BlocProvider<DijkstraToolSelectionCubit>(
-                  create: (_) => DijkstraToolSelectionCubit(
-                    const DijkstraToolSelectionState(),
+                BlocProvider<ToolSelectionCubit>(
+                  create: (_) => ToolSelectionCubit(
+                    const ToolSelectionState(),
                   ),
                 ),
-                BlocProvider<DijkstraGraphBloc>(
-                  create: (_) => DijkstraGraphBloc(),
+                BlocProvider<GraphBloc>(
+                  create: (_) => GraphBloc(),
                 ),
               ],
               child: const DijkstraScreen(),
@@ -51,7 +51,7 @@ class MyApp extends StatelessWidget {
           GoRoute(
             path: '/a-star-visualizer',
             parentNavigatorKey: _shellNavigatorKey,
-            builder: (context, state) => const AStarVisualizer(),
+            builder: (context, state) => const AStarScreen(),
           ),
         ],
       ),

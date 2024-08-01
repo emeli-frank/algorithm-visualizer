@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class AStarVisualizer extends StatelessWidget {
-  const AStarVisualizer({super.key});
+class AStarScreen extends StatelessWidget {
+  const AStarScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

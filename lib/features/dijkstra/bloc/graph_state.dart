@@ -1,7 +1,7 @@
-part of 'dijkstra_graph_bloc.dart';
+part of 'graph_bloc.dart';
 
-class DijkstraGraphState extends Equatable {
-  DijkstraGraphState({
+class GraphState extends Equatable {
+  GraphState({
     List<Vertex>? vertices,
     List<Edge>? edges,
     this.draggedVertexID,
@@ -31,7 +31,7 @@ class DijkstraGraphState extends Equatable {
   @override
   List<Object?> get props => [vertices, edges, draggedVertexID, dragStartOffset, temporaryEdgeEnd, startVertexOffset];
 
-  DijkstraGraphState copyWith({
+  GraphState copyWith({
     List<Vertex>? vertices,
     List<Edge>? edges,
     Optional<String?>? draggedVertexID,
@@ -39,7 +39,7 @@ class DijkstraGraphState extends Equatable {
     Optional<Offset?>? temporaryEdgeEnd,
     Optional<Offset?>? startVertexOffset,
   }) {
-    return DijkstraGraphState(
+    return GraphState(
       vertices: vertices ?? this.vertices,
       edges: edges ?? this.edges,
       draggedVertexID: draggedVertexID == null ? this.draggedVertexID : draggedVertexID.value,

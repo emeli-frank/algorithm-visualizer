@@ -5,7 +5,7 @@ class AppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var cubit = context.watch<DijkstraToolSelectionCubit>();
+    var cubit = context.watch<ToolSelectionCubit>();
 
     return Container(
       color: Colors.white,
