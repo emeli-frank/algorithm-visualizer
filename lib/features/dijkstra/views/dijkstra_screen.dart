@@ -23,15 +23,20 @@ class DijkstraScreen extends StatelessWidget {
   }
 }
 
-class DijkstraCanvas extends StatefulWidget {
+class DijkstraCanvas extends StatelessWidget {
   const DijkstraCanvas({super.key});
 
-  @override
-  State<DijkstraCanvas> createState() => _DijkstraCanvasState();
-}
-
-class _DijkstraCanvasState extends State<DijkstraCanvas> {
   final vertexRadius = 25.0;
+
+  // Returns a vertex if the offset is within the radius of a vertex, otherwise returns null
+  Vertex? _isOffsetWithinRadiusOfVertices(List<Vertex> vertices, Offset offset) {
+    for (var vertex in vertices) {
+      if (vertex.offset.isWithinRadius(offset, vertexRadius)) {
+        return vertex;
+      }
+    }
+    return null;
+  }
 
   void _addVertex(BuildContext context, Offset offset) {
     var graphBloc = context.read<DijkstraGraphBloc>();
@@ -40,11 +45,9 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
   }
 
   void _startDraggingVertex(BuildContext context, Offset offset, List<Vertex> vertices) {
-    for (var vertex in vertices) {
-      if (vertex.offset.isWithinRadius(offset, vertexRadius)) {
-        context.read<DijkstraGraphBloc>().add(StartVertexDragging(draggedVertexID: vertex.id, dragStartOffset: offset));
-        break;
-      }
+    var vertex = _isOffsetWithinRadiusOfVertices(vertices, offset);
+    if (vertex != null) {
+      context.read<DijkstraGraphBloc>().add(StartVertexDragging(draggedVertexID: vertex.id, dragStartOffset: offset));
     }
   }
 
@@ -75,29 +78,25 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
   }
 
   // Set start vertex for edge drawing
-  void _startDrawingEdge(Offset offset, List<Vertex> vertices) {
-    for (var vertex in vertices) {
-      if (vertex.offset.isWithinRadius(offset, vertexRadius)) {
-        context.read<DijkstraGraphBloc>().add(StartEdgeDrawing(startVertexOffset: vertex.offset));
-        break;
-      }
+  void _startDrawingEdge(BuildContext context, Offset offset, List<Vertex> vertices) {
+    var vertex = _isOffsetWithinRadiusOfVertices(vertices, offset);
+    if (vertex != null) {
+      context.read<DijkstraGraphBloc>().add(StartEdgeDrawing(startVertexOffset: vertex.offset));
     }
   }
 
-  void _updateTemporaryEdge(Offset offset) {
+  void _updateTemporaryEdge(BuildContext context, Offset offset) {
     context.read<DijkstraGraphBloc>().add(UpdateTemporaryEdge(temporaryEdgeEnd: offset));
   }
 
   // Save edge if tracing ends on a vertex
-  void _endDrawingEdge(Offset offset, List<Vertex> vertices) {
+  void _endDrawingEdge(BuildContext context, Offset offset, List<Vertex> vertices) {
     final startVertex = context.read<DijkstraGraphBloc>().state.startVertexOffset;
     if (startVertex != null) {
-      for (var vertex in vertices) {
-        if (vertex.offset.isWithinRadius(offset, vertexRadius)) {
-          var edge = Edge(id: Edge.generateID(), start: startVertex, end: vertex.offset);
-          context.read<DijkstraGraphBloc>().add(EdgeAdded(edge: edge));
-          break;
-        }
+      var vertex = _isOffsetWithinRadiusOfVertices(vertices, offset);
+      if (vertex != null) {
+        var edge = Edge(id: Edge.generateID(), start: startVertex, end: vertex.offset);
+        context.read<DijkstraGraphBloc>().add(EdgeAdded(edge: edge));
       }
     }
 
@@ -145,15 +144,15 @@ class _DijkstraCanvasState extends State<DijkstraCanvas> {
       cursor = SystemMouseCursors.click;
 
       onPanStartHandler = (details) {
-        _startDrawingEdge(details.localPosition, context.read<DijkstraGraphBloc>().state.vertices);
+        _startDrawingEdge(context, details.localPosition, context.read<DijkstraGraphBloc>().state.vertices);
       };
 
       onPanUpdateHandler = (details) {
-        _updateTemporaryEdge(details.localPosition);
+        _updateTemporaryEdge(context, details.localPosition);
       };
 
       onPanEndHandler = (details) {
-        _endDrawingEdge(details.localPosition, context.read<DijkstraGraphBloc>().state.vertices);
+        _endDrawingEdge(context, details.localPosition, context.read<DijkstraGraphBloc>().state.vertices);
       };
     }
 
