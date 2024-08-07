@@ -35,9 +35,9 @@ final class EdgeAdded extends GraphEvent {
 }
 
 final class StartEdgeDrawing extends GraphEvent {
-  StartEdgeDrawing({required this.startVertexOffset});
+  StartEdgeDrawing({required this.startVertex});
 
-  final Offset startVertexOffset;
+  final Vertex startVertex;
 }
 
 final class UpdateTemporaryEdge extends GraphEvent {
@@ -47,3 +47,9 @@ final class UpdateTemporaryEdge extends GraphEvent {
 }
 
 final class CompleteEdgeDrawing extends GraphEvent {}
+
+final class EdgeUpdated extends GraphEvent {
+  EdgeUpdated({required this.edge});
+
+  final Edge edge;
+}

@@ -29,7 +29,7 @@ class DijkstraCanvas extends StatelessWidget {
   final vertexRadius = 25.0;
 
   // Returns a vertex if the offset is within the radius of a vertex, otherwise returns null
-  Vertex? _isOffsetWithinRadiusOfVertices(List<Vertex> vertices, Offset offset) {
+  Vertex? _offsetWithinRadiusOfVertices(List<Vertex> vertices, Offset offset) {
     for (var vertex in vertices) {
       if (vertex.offset.isWithinRadius(offset, vertexRadius)) {
         return vertex;
@@ -45,7 +45,7 @@ class DijkstraCanvas extends StatelessWidget {
   }
 
   void _startDraggingVertex(BuildContext context, Offset offset, List<Vertex> vertices) {
-    var vertex = _isOffsetWithinRadiusOfVertices(vertices, offset);
+    var vertex = _offsetWithinRadiusOfVertices(vertices, offset);
     if (vertex != null) {
       context.read<GraphBloc>().add(StartVertexDragging(draggedVertexID: vertex.id, dragStartOffset: offset));
     }
@@ -79,9 +79,9 @@ class DijkstraCanvas extends StatelessWidget {
 
   // Set start vertex for edge drawing
   void _startDrawingEdge(BuildContext context, Offset offset, List<Vertex> vertices) {
-    var vertex = _isOffsetWithinRadiusOfVertices(vertices, offset);
+    var vertex = _offsetWithinRadiusOfVertices(vertices, offset);
     if (vertex != null) {
-      context.read<GraphBloc>().add(StartEdgeDrawing(startVertexOffset: vertex.offset));
+      context.read<GraphBloc>().add(StartEdgeDrawing(startVertex: vertex));
     }
   }
 
@@ -91,11 +91,11 @@ class DijkstraCanvas extends StatelessWidget {
 
   // Save edge if tracing ends on a vertex
   void _endDrawingEdge(BuildContext context, Offset offset, List<Vertex> vertices) {
-    final startVertex = context.read<GraphBloc>().state.startVertexOffset;
+    final startVertex = context.read<GraphBloc>().state.startVertex;
     if (startVertex != null) {
-      var vertex = _isOffsetWithinRadiusOfVertices(vertices, offset);
+      var vertex = _offsetWithinRadiusOfVertices(vertices, offset);
       if (vertex != null) {
-        var edge = Edge(id: Edge.generateID(), start: startVertex, end: vertex.offset);
+        var edge = Edge(id: Edge.generateID(), startVertex: startVertex, endVertex: vertex);
         context.read<GraphBloc>().add(EdgeAdded(edge: edge));
       }
     }
@@ -157,21 +157,50 @@ class DijkstraCanvas extends StatelessWidget {
     }
 
     return Expanded(
-      child: GestureDetector(
-        onTapUp: onTapHandler,
-        onPanStart: onPanStartHandler,
-        onPanUpdate: onPanUpdateHandler,
-        onPanEnd: onPanEndHandler,
-        child: MouseRegion(
-          cursor: cursor,
-          child: CustomPaint(
-            size: Size.infinite,
-            painter: GraphPainter(
-              vertices: context.watch<GraphBloc>().state.vertices,
-              edges: context.watch<GraphBloc>().state.edges,
-              vertexRadius: vertexRadius,
-              temporaryEdgeEnd: context.watch<GraphBloc>().state.temporaryEdgeEnd,
-              startVertex: context.watch<GraphBloc>().state.startVertexOffset,
+      child: BlocListener<GraphBloc, GraphState>(
+        listener: (context, state) {
+          if (state.draggedVertexID != null) {
+            for (var edge in state.edges) {
+              if (edge.startVertex.id == state.draggedVertexID ||
+                  edge.endVertex.id == state.draggedVertexID) {
+                var vertices = context.read<GraphBloc>().state.vertices;
+                var vertex = vertices
+                    .firstWhere((element) => element.id == state.draggedVertexID);
+                var startVertex = (edge.startVertex.id == state.draggedVertexID)
+                    ? vertex
+                    : edge.startVertex;
+                var endVertex = (edge.endVertex.id == state.draggedVertexID)
+                    ? vertex
+                    : edge.endVertex;
+                var updatedEdge = Edge(
+                  id: edge.id,
+                  startVertex: startVertex,
+                  endVertex: endVertex,
+                );
+                context.read<GraphBloc>().add(EdgeUpdated(edge: updatedEdge));
+              }
+            }
+          }
+        },
+        listenWhen: (previous, current) {
+          return previous.vertices != current.vertices;
+        },
+        child: GestureDetector(
+          onTapUp: onTapHandler,
+          onPanStart: onPanStartHandler,
+          onPanUpdate: onPanUpdateHandler,
+          onPanEnd: onPanEndHandler,
+          child: MouseRegion(
+            cursor: cursor,
+            child: CustomPaint(
+              size: Size.infinite,
+              painter: GraphPainter(
+                vertices: context.watch<GraphBloc>().state.vertices,
+                edges: context.watch<GraphBloc>().state.edges,
+                vertexRadius: vertexRadius,
+                temporaryEdgeEnd: context.watch<GraphBloc>().state.temporaryEdgeEnd,
+                startVertex: context.watch<GraphBloc>().state.startVertex?.offset,
+              ),
             ),
           ),
         ),
@@ -203,7 +232,7 @@ class GraphPainter extends CustomPainter {
       ..strokeWidth = 2;
 
     for (var edge in edges) {
-      canvas.drawLine(edge.start, edge.end, edgePaint);
+      canvas.drawLine(edge.startVertex.offset, edge.endVertex.offset, edgePaint);
     }
 
     if (startVertex != null && temporaryEdgeEnd != null) {

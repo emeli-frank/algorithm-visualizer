@@ -1,17 +1,17 @@
 import 'dart:math';
-import 'dart:ui';
 
+import 'package:algorithm_visualizer/features/dijkstra/models/vertex.dart';
 import 'package:equatable/equatable.dart';
 
 class Edge extends Equatable {
-  const Edge({required this.id, required this.start, required this.end});
+  const Edge({required this.id, required this.startVertex, required this.endVertex});
 
   final String id;
-  final Offset start;
-  final Offset end;
+  final Vertex startVertex;
+  final Vertex endVertex;
 
   @override
-  List<Object> get props => [id, start, end];
+  List<Object> get props => [id, startVertex, endVertex];
 
   static String generateID() {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';

@@ -7,7 +7,7 @@ class GraphState extends Equatable {
     this.draggedVertexID,
     this.dragStartOffset,
     this.temporaryEdgeEnd,
-    this.startVertexOffset,
+    this.startVertex,
   })  : vertices = vertices ?? [],
         edges = edges ?? [];
 
@@ -24,12 +24,19 @@ class GraphState extends Equatable {
   final Offset? temporaryEdgeEnd;
 
   // Represents the offset of the vertex where the dragging started
-  final Offset? startVertexOffset;
+  final Vertex? startVertex;
 
   bool get isDraggingVertex => draggedVertexID != null && dragStartOffset != null;
 
   @override
-  List<Object?> get props => [vertices, edges, draggedVertexID, dragStartOffset, temporaryEdgeEnd, startVertexOffset];
+  List<Object?> get props => [
+        vertices,
+        edges,
+        draggedVertexID,
+        dragStartOffset,
+        temporaryEdgeEnd,
+        startVertex,
+      ];
 
   GraphState copyWith({
     List<Vertex>? vertices,
@@ -37,7 +44,7 @@ class GraphState extends Equatable {
     Optional<String?>? draggedVertexID,
     Optional<Offset?>? dragStartOffset,
     Optional<Offset?>? temporaryEdgeEnd,
-    Optional<Offset?>? startVertexOffset,
+    Optional<Vertex?>? startVertex,
   }) {
     return GraphState(
       vertices: vertices ?? this.vertices,
@@ -45,7 +52,7 @@ class GraphState extends Equatable {
       draggedVertexID: draggedVertexID == null ? this.draggedVertexID : draggedVertexID.value,
       dragStartOffset: dragStartOffset == null ? this.dragStartOffset : dragStartOffset.value,
       temporaryEdgeEnd: temporaryEdgeEnd == null ? this.temporaryEdgeEnd : temporaryEdgeEnd.value,
-      startVertexOffset: startVertexOffset == null ? this.startVertexOffset : startVertexOffset.value,
+      startVertex: startVertex == null ? this.startVertex : startVertex.value,
     );
   }
 }

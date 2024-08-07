@@ -53,7 +53,7 @@ class GraphBloc extends Bloc<GraphEvent, GraphState> {
 
     // Saves the vertex where the edge drawing started
     on<StartEdgeDrawing>((StartEdgeDrawing event, Emitter<GraphState> emit) {
-      emit(state.copyWith(startVertexOffset: Optional<Offset>(event.startVertexOffset)));
+      emit(state.copyWith(startVertex: Optional<Vertex>(event.startVertex)));
     });
 
     // Updates the position of the temporary edge end
@@ -64,7 +64,7 @@ class GraphBloc extends Bloc<GraphEvent, GraphState> {
     // Resets the start vertex and the temporary edge end after the edge drawing is completed
     on<CompleteEdgeDrawing>((CompleteEdgeDrawing event, Emitter<GraphState> emit) {
       emit(state.copyWith(
-        startVertexOffset: const Optional<Offset?>(null),
+        startVertex: const Optional<Vertex?>(null),
         temporaryEdgeEnd: const Optional<Offset?>(null),
       ));
     });
@@ -73,6 +73,19 @@ class GraphBloc extends Bloc<GraphEvent, GraphState> {
     on<EdgeAdded>((EdgeAdded event, Emitter<GraphState> emit) {
       var edgesCopy = [...state.edges];
       edgesCopy.add(event.edge);
+
+      emit(state.copyWith(edges: edgesCopy));
+    });
+
+    // Updates (the position of) an existing edge
+    on<EdgeUpdated>((EdgeUpdated event, Emitter<GraphState> emit) {
+      var edgesCopy = [...state.edges];
+      for (var i = 0; i < edgesCopy.length; i++) {
+        if (edgesCopy[i].id == event.edge.id) {
+          edgesCopy[i] = event.edge;
+          break;
+        }
+      }
 
       emit(state.copyWith(edges: edgesCopy));
     });
