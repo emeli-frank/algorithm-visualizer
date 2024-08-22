@@ -5,14 +5,14 @@ sealed class GraphEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-final class VerticesAdded extends GraphEvent {
-  VerticesAdded({required this.vertex});
+final class VertexAdded extends GraphEvent {
+  VertexAdded({required this.vertex});
 
   final Vertex vertex;
 }
 
-final class VerticesUpdated extends GraphEvent {
-  VerticesUpdated({required this.vertex});
+final class VertexUpdated extends GraphEvent {
+  VertexUpdated({required this.vertex});
 
   final Vertex vertex;
 }
@@ -52,4 +52,10 @@ final class EdgeUpdated extends GraphEvent {
   EdgeUpdated({required this.edge});
 
   final Edge edge;
+}
+
+final class VertexSelected extends GraphEvent {
+  VertexSelected({required this.vertexID});
+
+  final String? vertexID;
 }

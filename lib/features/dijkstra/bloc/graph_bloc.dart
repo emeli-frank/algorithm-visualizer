@@ -12,7 +12,7 @@ part 'graph_event.dart';
 class GraphBloc extends Bloc<GraphEvent, GraphState> {
   GraphBloc() : super(GraphState()) {
     // Adds a new vertex
-    on<VerticesAdded>((VerticesAdded event, Emitter<GraphState> emit) {
+    on<VertexAdded>((VertexAdded event, Emitter<GraphState> emit) {
       var verticesCopy = [...state.vertices];
       verticesCopy.add(event.vertex);
 
@@ -20,7 +20,7 @@ class GraphBloc extends Bloc<GraphEvent, GraphState> {
     });
 
     // Updates (the position of) an existing vertex while dragging
-    on<VerticesUpdated>((VerticesUpdated event, Emitter<GraphState> emit) {
+    on<VertexUpdated>((VertexUpdated event, Emitter<GraphState> emit) {
       var verticesCopy = [...state.vertices];
       for (var i = 0; i < verticesCopy.length; i++) {
         if (verticesCopy[i].id == event.vertex.id) {
@@ -88,6 +88,11 @@ class GraphBloc extends Bloc<GraphEvent, GraphState> {
       }
 
       emit(state.copyWith(edges: edgesCopy));
+    });
+
+    // Selects/unselects a vertex
+    on<VertexSelected>((VertexSelected event, Emitter<GraphState> emit) {
+      emit(state.copyWith(selectedVertexID: Optional<String?>(event.vertexID)));
     });
   }
 }

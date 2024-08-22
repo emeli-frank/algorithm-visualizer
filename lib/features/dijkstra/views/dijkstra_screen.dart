@@ -41,7 +41,7 @@ class DijkstraCanvas extends StatelessWidget {
   void _addVertex(BuildContext context, Offset offset) {
     var graphBloc = context.read<GraphBloc>();
     var vertex = Vertex(id: Vertex.generateID(), offset: offset);
-    graphBloc.add(VerticesAdded(vertex: vertex));
+    graphBloc.add(VertexAdded(vertex: vertex));
   }
 
   void _startDraggingVertex(BuildContext context, Offset offset, List<Vertex> vertices) {
@@ -69,7 +69,7 @@ class DijkstraCanvas extends StatelessWidget {
         ),
       );
 
-      graphBloc.add(VerticesUpdated(vertex: updatedVertex));
+      graphBloc.add(VertexUpdated(vertex: updatedVertex));
     }
   }
 
@@ -103,6 +103,19 @@ class DijkstraCanvas extends StatelessWidget {
     context.read<GraphBloc>().add(CompleteEdgeDrawing());
   }
 
+  void _selectOrUnselectVertex(BuildContext context, Offset offset) {
+    var v = _offsetWithinRadiusOfVertices(context.read<GraphBloc>().state.vertices, offset);
+    if (v == null) {
+      context.read<GraphBloc>().add(VertexSelected(vertexID: null));
+      return;
+    }
+
+    var selectedVertexID = context.read<GraphBloc>().state.selectedVertexID;
+    if (selectedVertexID == null || selectedVertexID != v.id) {
+      context.read<GraphBloc>().add(VertexSelected(vertexID: v.id));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     var toolSelectionCubit = context.watch<ToolSelectionCubit>();
@@ -122,6 +135,7 @@ class DijkstraCanvas extends StatelessWidget {
 
     if (toolSelectionCubit.state.selection == DijkstraTools.pan) {
       onPanStartHandler = (details) {
+        _selectOrUnselectVertex(context, details.localPosition);
         _startDraggingVertex(context, details.localPosition, context.read<GraphBloc>().state.vertices);
       };
 
@@ -183,7 +197,9 @@ class DijkstraCanvas extends StatelessWidget {
           }
         },
         listenWhen: (previous, current) {
-          return previous.vertices != current.vertices;
+          return previous.vertices != current.vertices ||
+              previous.edges != current.edges ||
+              previous.selectedVertexID != current.selectedVertexID;
         },
         child: GestureDetector(
           onTapUp: onTapHandler,
@@ -200,6 +216,7 @@ class DijkstraCanvas extends StatelessWidget {
                 vertexRadius: vertexRadius,
                 temporaryEdgeEnd: context.watch<GraphBloc>().state.temporaryEdgeEnd,
                 startVertex: context.watch<GraphBloc>().state.startVertex?.offset,
+                selectedVertexID: context.watch<GraphBloc>().state.selectedVertexID,
               ),
             ),
           ),
@@ -216,6 +233,7 @@ class GraphPainter extends CustomPainter {
     required this.edges,
     this.temporaryEdgeEnd,
     this.startVertex,
+    this.selectedVertexID,
   });
 
   final List<Vertex> vertices;
@@ -223,6 +241,7 @@ class GraphPainter extends CustomPainter {
   final double vertexRadius;
   final Offset? temporaryEdgeEnd;
   final Offset? startVertex;
+  final String? selectedVertexID;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -240,8 +259,15 @@ class GraphPainter extends CustomPainter {
     }
 
     // Draw vertices
-    final vertexPaint = Paint()
-      ..color = Colors.white
+    const vertexFillColor = Colors.white;
+    const vertexFocusedFillColor = Colors.orange;
+
+    final vertexFillPaint = Paint()
+      ..color = vertexFillColor
+      ..style = PaintingStyle.fill;
+
+    final vertexFocusFillPaint = Paint()
+      ..color = vertexFocusedFillColor
       ..style = PaintingStyle.fill;
 
     final vertexBorderPaint = Paint()
@@ -250,7 +276,11 @@ class GraphPainter extends CustomPainter {
       ..strokeWidth = 4;
 
     for (var vertex in vertices) {
-      canvas.drawCircle(vertex.offset, vertexRadius, vertexPaint);
+      if (selectedVertexID != null && vertex.id == selectedVertexID) {
+        canvas.drawCircle(vertex.offset, vertexRadius, vertexFocusFillPaint);
+      } else {
+        canvas.drawCircle(vertex.offset, vertexRadius, vertexFillPaint);
+      }
       canvas.drawCircle(vertex.offset, vertexRadius, vertexBorderPaint);
     }
   }
@@ -260,6 +290,7 @@ class GraphPainter extends CustomPainter {
     return oldDelegate.vertices != vertices ||
         oldDelegate.edges != edges ||
         oldDelegate.temporaryEdgeEnd != temporaryEdgeEnd ||
-        oldDelegate.startVertex != startVertex;
+        oldDelegate.startVertex != startVertex ||
+        oldDelegate.selectedVertexID != selectedVertexID;
   }
 }
