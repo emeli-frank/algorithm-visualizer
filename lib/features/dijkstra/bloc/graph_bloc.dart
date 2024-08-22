@@ -100,9 +100,15 @@ class GraphBloc extends Bloc<GraphEvent, GraphState> {
       var verticesCopy = [...state.vertices];
       verticesCopy.removeWhere((vertex) => vertex.id == event.vertexID);
 
+      var edgesCopy = [...state.edges];
+      edgesCopy.removeWhere((edge) =>
+          edge.startVertex.id == event.vertexID ||
+          edge.endVertex.id == event.vertexID);
+
       emit(
         state.copyWith(
             vertices: verticesCopy,
+            edges: edgesCopy,
             selectedVertexID: const Optional<String?>(null)),
       );
     });
