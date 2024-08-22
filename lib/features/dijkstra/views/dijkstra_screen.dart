@@ -289,24 +289,13 @@ class GraphPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // Draw edges
-    final edgePaint = Paint()
-      ..color = Colors.black
-      ..strokeWidth = 2;
-
-    final selectedEdgePaint = Paint()
-      ..color = Colors.orange
-      ..strokeWidth = 4;
-
-    for (var edge in edges) {
-      Paint paint = edge.id == selectedEdgeID ? selectedEdgePaint : edgePaint;
-      canvas.drawLine(edge.startVertex.offset, edge.endVertex.offset, paint);
-    }
-
-    if (startVertex != null && temporaryEdgeEnd != null) {
-      canvas.drawLine(startVertex!, temporaryEdgeEnd!, edgePaint..color = Colors.grey);
-    }
+    _drawEdges(canvas);
 
     // Draw vertices
+    _drawVertices(canvas);
+  }
+
+  void _drawVertices(Canvas canvas) {
     const vertexFillColor = Colors.white;
     const vertexFocusedFillColor = Colors.orange;
 
@@ -330,6 +319,47 @@ class GraphPainter extends CustomPainter {
         canvas.drawCircle(vertex.offset, vertexRadius, vertexFillPaint);
       }
       canvas.drawCircle(vertex.offset, vertexRadius, vertexBorderPaint);
+    }
+  }
+
+  void _drawEdges(Canvas canvas) {
+    final edgePaint = Paint()
+      ..color = Colors.black
+      ..strokeWidth = 2;
+
+    final selectedEdgePaint = Paint()
+      ..color = Colors.orange
+      ..strokeWidth = 4;
+
+    for (var edge in edges) {
+      Paint paint = edge.id == selectedEdgeID ? selectedEdgePaint : edgePaint;
+      canvas.drawLine(edge.startVertex.offset, edge.endVertex.offset, paint);
+
+      // Draw the weight
+      // Calculate the midpoint for the weight label
+      final midPoint = Offset(
+        (edge.startVertex.offset.dx + edge.endVertex.offset.dx) / 2,
+        (edge.startVertex.offset.dy + edge.endVertex.offset.dy) / 2,
+      );
+
+      final textSpan = TextSpan(
+        text: edge.weight.toString(),
+        style: const TextStyle(
+          color: Colors.black,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      );
+      final textPainter = TextPainter(
+        text: textSpan,
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, midPoint);
+    }
+
+    if (startVertex != null && temporaryEdgeEnd != null) {
+      canvas.drawLine(startVertex!, temporaryEdgeEnd!, edgePaint..color = Colors.grey);
     }
   }
 
