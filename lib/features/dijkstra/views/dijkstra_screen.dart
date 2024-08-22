@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:algorithm_visualizer/features/dijkstra/bloc/graph_bloc.dart';
 import 'package:algorithm_visualizer/features/dijkstra/cubit/tool_selection_cubit.dart';
 import 'package:algorithm_visualizer/features/dijkstra/models/edge.dart';
@@ -27,6 +29,43 @@ class DijkstraCanvas extends StatelessWidget {
   const DijkstraCanvas({super.key});
 
   final vertexRadius = 25.0;
+  final edgeThickness = 2.0;
+  final edgeClickableThickness = 8.0;
+
+  bool _isPointOnLineSegment(double x1, double y1, double x2, double y2, double x, double y, double thickness) {
+    // Calculate the distance from the point to the line
+    double distance = ((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1).abs() /
+        sqrt(pow(y2 - y1, 2) + pow(x2 - x1, 2));
+
+    // Check if the distance is within half the thickness of the line
+    if (distance > thickness / 2) {
+      return false;
+    }
+
+    // Check if the point is within the bounding box defined by the two coordinates
+    bool withinXBounds = (x >= x1 && x <= x2) || (x >= x2 && x <= x1);
+    bool withinYBounds = (y >= y1 && y <= y2) || (y >= y2 && y <= y1);
+
+    return withinXBounds && withinYBounds;
+  }
+
+  Edge? _offsetOnLineSegment(List<Edge> edges, Offset offset) {
+    for (var edge in edges) {
+      var onSegment = _isPointOnLineSegment(
+        edge.startVertex.offset.dx,
+        edge.startVertex.offset.dy,
+        edge.endVertex.offset.dx,
+        edge.endVertex.offset.dy,
+        offset.dx,
+        offset.dy,
+        edgeClickableThickness,
+      );
+      if (onSegment) {
+        return edge;
+      }
+    }
+    return null;
+  }
 
   // Returns a vertex if the offset is within the radius of a vertex, otherwise returns null
   Vertex? _offsetWithinRadiusOfVertices(List<Vertex> vertices, Offset offset) {
@@ -103,17 +142,18 @@ class DijkstraCanvas extends StatelessWidget {
     context.read<GraphBloc>().add(CompleteEdgeDrawing());
   }
 
-  void _selectOrUnselectVertex(BuildContext context, Offset offset) {
+  void _selectOrUnselectVertexOrEdge(BuildContext context, Offset offset) {
+    context.read<GraphBloc>().add(VertexSelected(vertexID: null));
+    context.read<GraphBloc>().add(EdgeSelected(edgeID: null));
+
     var v = _offsetWithinRadiusOfVertices(context.read<GraphBloc>().state.vertices, offset);
-    if (v == null) {
-      context.read<GraphBloc>().add(VertexSelected(vertexID: null));
+    context.read<GraphBloc>().add(VertexSelected(vertexID: v?.id));
+    if (v != null) {
       return;
     }
 
-    var selectedVertexID = context.read<GraphBloc>().state.selectedVertexID;
-    if (selectedVertexID == null || selectedVertexID != v.id) {
-      context.read<GraphBloc>().add(VertexSelected(vertexID: v.id));
-    }
+    var edge = _offsetOnLineSegment(context.read<GraphBloc>().state.edges, offset);
+    context.read<GraphBloc>().add(EdgeSelected(edgeID: edge?.id));
   }
 
   @override
@@ -135,7 +175,7 @@ class DijkstraCanvas extends StatelessWidget {
 
     if (toolSelectionCubit.state.selection == DijkstraTools.pan) {
       onPanStartHandler = (details) {
-        _selectOrUnselectVertex(context, details.localPosition);
+        _selectOrUnselectVertexOrEdge(context, details.localPosition);
         _startDraggingVertex(context, details.localPosition, context.read<GraphBloc>().state.vertices);
       };
 
@@ -217,6 +257,7 @@ class DijkstraCanvas extends StatelessWidget {
                 temporaryEdgeEnd: context.watch<GraphBloc>().state.temporaryEdgeEnd,
                 startVertex: context.watch<GraphBloc>().state.startVertex?.offset,
                 selectedVertexID: context.watch<GraphBloc>().state.selectedVertexID,
+                selectedEdgeID: context.watch<GraphBloc>().state.selectedEdgeID,
               ),
             ),
           ),
@@ -234,6 +275,7 @@ class GraphPainter extends CustomPainter {
     this.temporaryEdgeEnd,
     this.startVertex,
     this.selectedVertexID,
+    this.selectedEdgeID,
   });
 
   final List<Vertex> vertices;
@@ -242,6 +284,7 @@ class GraphPainter extends CustomPainter {
   final Offset? temporaryEdgeEnd;
   final Offset? startVertex;
   final String? selectedVertexID;
+  final String? selectedEdgeID;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -250,8 +293,13 @@ class GraphPainter extends CustomPainter {
       ..color = Colors.black
       ..strokeWidth = 2;
 
+    final selectedEdgePaint = Paint()
+      ..color = Colors.orange
+      ..strokeWidth = 4;
+
     for (var edge in edges) {
-      canvas.drawLine(edge.startVertex.offset, edge.endVertex.offset, edgePaint);
+      Paint paint = edge.id == selectedEdgeID ? selectedEdgePaint : edgePaint;
+      canvas.drawLine(edge.startVertex.offset, edge.endVertex.offset, paint);
     }
 
     if (startVertex != null && temporaryEdgeEnd != null) {
@@ -291,6 +339,7 @@ class GraphPainter extends CustomPainter {
         oldDelegate.edges != edges ||
         oldDelegate.temporaryEdgeEnd != temporaryEdgeEnd ||
         oldDelegate.startVertex != startVertex ||
-        oldDelegate.selectedVertexID != selectedVertexID;
+        oldDelegate.selectedVertexID != selectedVertexID ||
+        oldDelegate.selectedEdgeID != selectedEdgeID;
   }
 }

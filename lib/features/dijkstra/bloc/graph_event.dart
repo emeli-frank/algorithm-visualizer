@@ -65,3 +65,15 @@ final class VertexDeleted extends GraphEvent {
 
   final String vertexID;
 }
+
+final class EdgeSelected extends GraphEvent {
+  EdgeSelected({required this.edgeID});
+
+  final String? edgeID;
+}
+
+final class EdgeDeleted extends GraphEvent {
+  EdgeDeleted({required this.edgeID});
+
+  final String edgeID;
+}

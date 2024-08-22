@@ -112,5 +112,22 @@ class GraphBloc extends Bloc<GraphEvent, GraphState> {
             selectedVertexID: const Optional<String?>(null)),
       );
     });
+
+    // Selects/unselects a vertex
+    on<EdgeSelected>((EdgeSelected event, Emitter<GraphState> emit) {
+      emit(state.copyWith(selectedEdgeID: Optional<String?>(event.edgeID)));
+    });
+
+    // Deletes a edge
+    on<EdgeDeleted>((EdgeDeleted event, Emitter<GraphState> emit) {
+      var edgesCopy = [...state.edges];
+      edgesCopy.removeWhere((edge) => edge.id == event.edgeID);
+
+      emit(
+        state.copyWith(
+            edges: edgesCopy,
+            selectedVertexID: const Optional<String?>(null)),
+      );
+    });
   }
 }
