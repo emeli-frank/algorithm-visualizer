@@ -59,3 +59,9 @@ final class VertexSelected extends GraphEvent {
 
   final String? vertexID;
 }
+
+final class VertexDeleted extends GraphEvent {
+  VertexDeleted({required this.vertexID});
+
+  final String vertexID;
+}

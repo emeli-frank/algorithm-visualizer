@@ -13,6 +13,18 @@ class AppBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
+          Visibility(
+            visible: context.watch<GraphBloc>().state.selectedVertexID != null,
+            child: ToolBarButtons(
+              onPressed: () {
+                var selectedVertexID = context.read<GraphBloc>().state.selectedVertexID;
+                if (selectedVertexID == null) return;
+                context.read<GraphBloc>().add(VertexDeleted(vertexID: selectedVertexID),);
+              },
+              iconData: Icons.delete_outline,
+              tooltip: 'Delete (Del)',
+            ),
+          ),
           ToolBarButtons(
             onPressed: () {},
             iconData: Icons.undo,

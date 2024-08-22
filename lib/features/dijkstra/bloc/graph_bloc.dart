@@ -94,5 +94,17 @@ class GraphBloc extends Bloc<GraphEvent, GraphState> {
     on<VertexSelected>((VertexSelected event, Emitter<GraphState> emit) {
       emit(state.copyWith(selectedVertexID: Optional<String?>(event.vertexID)));
     });
+
+    // Deletes a vertex
+    on<VertexDeleted>((VertexDeleted event, Emitter<GraphState> emit) {
+      var verticesCopy = [...state.vertices];
+      verticesCopy.removeWhere((vertex) => vertex.id == event.vertexID);
+
+      emit(
+        state.copyWith(
+            vertices: verticesCopy,
+            selectedVertexID: const Optional<String?>(null)),
+      );
+    });
   }
 }
