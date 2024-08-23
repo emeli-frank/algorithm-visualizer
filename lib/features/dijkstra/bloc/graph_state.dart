@@ -36,6 +36,15 @@ class GraphState extends Equatable {
 
   bool get isDraggingVertex => draggedVertexID != null && dragStartOffset != null;
 
+  Edge? get selectedEdge {
+    for (var edge in edges) {
+      if (edge.id == selectedEdgeID) {
+        return edge;
+      }
+    }
+    return null;
+  }
+
   @override
   List<Object?> get props => [
         vertices,

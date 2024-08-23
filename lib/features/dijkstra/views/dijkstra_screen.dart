@@ -226,8 +226,7 @@ class DijkstraCanvas extends StatelessWidget {
                 var endVertex = (edge.endVertex.id == state.draggedVertexID)
                     ? vertex
                     : edge.endVertex;
-                var updatedEdge = Edge(
-                  id: edge.id,
+                var updatedEdge = edge.copyWith(
                   startVertex: startVertex,
                   endVertex: endVertex,
                 );
@@ -248,17 +247,41 @@ class DijkstraCanvas extends StatelessWidget {
           onPanEnd: onPanEndHandler,
           child: MouseRegion(
             cursor: cursor,
-            child: CustomPaint(
-              size: Size.infinite,
-              painter: GraphPainter(
-                vertices: context.watch<GraphBloc>().state.vertices,
-                edges: context.watch<GraphBloc>().state.edges,
-                vertexRadius: vertexRadius,
-                temporaryEdgeEnd: context.watch<GraphBloc>().state.temporaryEdgeEnd,
-                startVertex: context.watch<GraphBloc>().state.startVertex?.offset,
-                selectedVertexID: context.watch<GraphBloc>().state.selectedVertexID,
-                selectedEdgeID: context.watch<GraphBloc>().state.selectedEdgeID,
-              ),
+            child: Stack(
+              children: [
+                CustomPaint(
+                  size: Size.infinite,
+                  painter: GraphPainter(
+                    vertices: context.watch<GraphBloc>().state.vertices,
+                    edges: context.watch<GraphBloc>().state.edges,
+                    vertexRadius: vertexRadius,
+                    temporaryEdgeEnd: context.watch<GraphBloc>().state.temporaryEdgeEnd,
+                    startVertex: context.watch<GraphBloc>().state.startVertex?.offset,
+                    selectedVertexID: context.watch<GraphBloc>().state.selectedVertexID,
+                    selectedEdgeID: context.watch<GraphBloc>().state.selectedEdgeID,
+                  ),
+                ),
+                Visibility(
+                  visible: context.watch<GraphBloc>().state.selectedEdgeID != null,
+                  child: Positioned(
+                    bottom: 4,
+                    child: SizedBox(
+                      height: 40.0,
+                      width: 60.0,
+                      child: EdgeWeightTextField(
+                        weight: context.watch<GraphBloc>().state.selectedEdge?.weight,
+                        onWeightChanged: (weight) {
+                          var selectedEdge = context.read<GraphBloc>().state.selectedEdge;
+                          if (selectedEdge != null) {
+                            var newEdge = selectedEdge.copyWith(weight: weight);
+                            context.read<GraphBloc>().add(EdgeUpdated(edge: newEdge));
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -355,7 +378,14 @@ class GraphPainter extends CustomPainter {
         textDirection: TextDirection.ltr,
       );
       textPainter.layout();
-      textPainter.paint(canvas, midPoint);
+
+      // Calculate the position to draw the text so it is centered
+      final offset = midPoint.translate(
+        -textPainter.width / 2,
+        -textPainter.height / 2,
+      );
+
+      textPainter.paint(canvas, offset);
     }
 
     if (startVertex != null && temporaryEdgeEnd != null) {
@@ -371,5 +401,47 @@ class GraphPainter extends CustomPainter {
         oldDelegate.startVertex != startVertex ||
         oldDelegate.selectedVertexID != selectedVertexID ||
         oldDelegate.selectedEdgeID != selectedEdgeID;
+  }
+}
+
+class EdgeWeightTextField extends StatefulWidget {
+  const EdgeWeightTextField({super.key, required this.weight, required this.onWeightChanged});
+
+  final int? weight;
+  final Function(int) onWeightChanged;
+
+  @override
+  State<EdgeWeightTextField> createState() => _EdgeWeightTextFieldState();
+}
+
+class _EdgeWeightTextFieldState extends State<EdgeWeightTextField> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.text = widget.weight.toString() ?? '';
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: _controller,
+      decoration: const InputDecoration(
+        border: OutlineInputBorder(),
+        labelText: 'Weight',
+        hintText: 'Enter the weight of the edge',
+      ),
+      onChanged: (value) {
+        int weight = int.tryParse(value) ?? 1;
+        widget.onWeightChanged(weight);
+      },
+    );
   }
 }

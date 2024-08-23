@@ -17,11 +17,25 @@ class Edge extends Equatable {
   final int weight;
 
   @override
-  List<Object> get props => [id, startVertex, endVertex];
+  List<Object> get props => [id, startVertex, endVertex, weight];
 
   static String generateID() {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     final rand = Random();
     return List.generate(16, (index) => chars[rand.nextInt(chars.length)]).join();
+  }
+
+  Edge copyWith({
+    String? id,
+    Vertex? startVertex,
+    Vertex? endVertex,
+    int? weight,
+  }) {
+    return Edge(
+      id: id ?? this.id,
+      startVertex: startVertex ?? this.startVertex,
+      endVertex: endVertex ?? this.endVertex,
+      weight: weight ?? this.weight,
+    );
   }
 }
