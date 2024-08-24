@@ -129,5 +129,9 @@ class GraphBloc extends Bloc<GraphEvent, GraphState> {
             selectedVertexID: const Optional<String?>(null)),
       );
     });
+
+    on<GraphElementReset>((GraphElementReset event, Emitter<GraphState> emit) {
+      emit(state.copyWith(vertices: event.vertices, edges: event.edges));
+    });
   }
 }

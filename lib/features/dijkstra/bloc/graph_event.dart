@@ -79,3 +79,10 @@ final class EdgeDeleted extends GraphEvent {
 }
 
 // todo:: add a clear graph event
+
+final class GraphElementReset extends GraphEvent {
+  GraphElementReset({required this.vertices, required this.edges});
+
+  final List<Vertex> vertices;
+  final List<Edge> edges;
+}

@@ -69,7 +69,9 @@ class Result {
   String toString() {
     String output = 'Vertex, Distance, Previous';
     for (var i = 0; i < distances.length; i++) {
-      output += '\n${distances.keys.elementAt(i).id},      ${distances.values.elementAt(i)},      ${previousVertices.values.elementAt(i)?.id ?? 'null'}';
+      output += '\n${distances.keys.elementAt(i).id},      '
+          '${distances.values.elementAt(i)},      '
+          '${previousVertices.values.elementAt(i)?.id ?? 'null'}';
     }
     return output;
   }
