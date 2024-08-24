@@ -9,12 +9,8 @@ class Vertex extends Equatable {
   final String id;
   final Offset offset;
 
+  String get label => id;
+
   @override
   List<Object> get props => [id, offset];
-
-  static String generateID() {
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    final rand = Random();
-    return List.generate(16, (index) => chars[rand.nextInt(chars.length)]).join();
-  }
 }

@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:algorithm_visualizer/features/dijkstra/bloc/animation_bloc.dart';
 import 'package:algorithm_visualizer/features/dijkstra/bloc/graph_bloc.dart';
 import 'package:algorithm_visualizer/features/dijkstra/cubit/tool_selection_cubit.dart';
 import 'package:algorithm_visualizer/features/dijkstra/models/edge.dart';
@@ -80,8 +81,15 @@ class DijkstraCanvas extends StatelessWidget {
 
   void _addVertex(BuildContext context, Offset offset) {
     var graphBloc = context.read<GraphBloc>();
-    var vertex = Vertex(id: Vertex.generateID(), offset: offset);
+    var vertex = Vertex(id: _getNextVertexID(context.read<GraphBloc>().state.vertices), offset: offset);
     graphBloc.add(VertexAdded(vertex: vertex));
+  }
+
+  String _getNextVertexID(List<Vertex> vertices) {
+    if (vertices.isEmpty) {
+      return '0';
+    }
+    return (int.parse(vertices.last.id) + 1).toString();
   }
 
   void _startDraggingVertex(BuildContext context, Offset offset, List<Vertex> vertices) {
@@ -296,7 +304,13 @@ class DijkstraCanvas extends StatelessWidget {
                           icon: const Icon(Icons.skip_previous_outlined),
                         ),
                         IconButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            context.read<AnimationBloc>().add(AnimationStarted(
+                              startVertex: context.read<GraphBloc>().state.vertices.first, // todo:: should be selected dynamically
+                              vertices: context.read<GraphBloc>().state.vertices,
+                              edges: context.read<GraphBloc>().state.edges,
+                            ));
+                          },
                           icon: const Icon(Icons.play_arrow_outlined),
                         ),
                         IconButton(
@@ -345,6 +359,7 @@ class GraphPainter extends CustomPainter {
   }
 
   void _drawVertices(Canvas canvas) {
+    const borderThickness = 4.0;
     const vertexFillColor = Colors.white;
     const vertexFocusedFillColor = Colors.orange;
 
@@ -359,7 +374,7 @@ class GraphPainter extends CustomPainter {
     final vertexBorderPaint = Paint()
       ..color = Colors.blue
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 4;
+      ..strokeWidth = borderThickness;
 
     for (var vertex in vertices) {
       if (selectedVertexID != null && vertex.id == selectedVertexID) {
@@ -367,8 +382,37 @@ class GraphPainter extends CustomPainter {
       } else {
         canvas.drawCircle(vertex.offset, vertexRadius, vertexFillPaint);
       }
-      canvas.drawCircle(vertex.offset, vertexRadius, vertexBorderPaint);
+      canvas.drawCircle(vertex.offset, vertexRadius - borderThickness + 2, vertexBorderPaint);
+
+      _drawVertexLabel(canvas, vertex);
     }
+  }
+
+  void _drawVertexLabel(Canvas canvas, Vertex vertex) {
+    // Prepare the label
+    final textSpan = TextSpan(
+      text: vertex.label,
+      style: const TextStyle(
+        color: Colors.black,
+        fontSize: 14.0,
+      ),
+    );
+
+    final textPainter = TextPainter(
+      text: textSpan,
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+    );
+
+    textPainter.layout();
+
+    // Calculate the position to center the label on the vertex
+    final textOffset = Offset(
+      vertex.offset.dx - textPainter.width / 2,
+      vertex.offset.dy - textPainter.height / 2,
+    );
+
+    textPainter.paint(canvas, textOffset);
   }
 
   void _drawEdges(Canvas canvas) {

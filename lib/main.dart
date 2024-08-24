@@ -1,4 +1,5 @@
 import 'package:algorithm_visualizer/features/a_star/views/a_star_screen.dart';
+import 'package:algorithm_visualizer/features/dijkstra/bloc/animation_bloc.dart';
 import 'package:algorithm_visualizer/features/dijkstra/bloc/graph_bloc.dart';
 import 'package:algorithm_visualizer/features/dijkstra/cubit/tool_selection_cubit.dart';
 import 'package:algorithm_visualizer/features/dijkstra/views/dijkstra_screen.dart';
@@ -43,6 +44,9 @@ class MyApp extends StatelessWidget {
                 ),
                 BlocProvider<GraphBloc>(
                   create: (_) => GraphBloc(),
+                ),
+                BlocProvider<AnimationBloc>(
+                  create: (_) => AnimationBloc(),
                 ),
               ],
               child: const DijkstraScreen(),
