@@ -5,6 +5,7 @@ import 'package:algorithm_visualizer/features/dijkstra/cubit/tool_selection_cubi
 import 'package:algorithm_visualizer/features/dijkstra/models/edge.dart';
 import 'package:algorithm_visualizer/features/dijkstra/models/vertex.dart';
 import 'package:algorithm_visualizer/utils/extensions/offset_extensions.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -264,7 +265,7 @@ class DijkstraCanvas extends StatelessWidget {
                 Visibility(
                   visible: context.watch<GraphBloc>().state.selectedEdgeID != null,
                   child: Positioned(
-                    bottom: 4,
+                    bottom: 100,
                     child: SizedBox(
                       height: 40.0,
                       width: 60.0,
@@ -278,6 +279,31 @@ class DijkstraCanvas extends StatelessWidget {
                           }
                         },
                       ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  left: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(8.0),
+                    color: Colors.white,
+                    child: Row(
+                      children: [
+                        IconButton(
+                          onPressed: () {},
+                          icon: const Icon(Icons.skip_previous_outlined),
+                        ),
+                        IconButton(
+                          onPressed: () {},
+                          icon: const Icon(Icons.play_arrow_outlined),
+                        ),
+                        IconButton(
+                          onPressed: () {},
+                          icon: const Icon(Icons.skip_next_outlined),
+                        ),
+                      ],
                     ),
                   ),
                 ),

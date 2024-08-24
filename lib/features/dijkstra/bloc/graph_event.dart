@@ -77,3 +77,5 @@ final class EdgeDeleted extends GraphEvent {
 
   final String edgeID;
 }
+
+// todo:: add a clear graph event
