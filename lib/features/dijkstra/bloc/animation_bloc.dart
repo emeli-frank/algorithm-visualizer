@@ -34,8 +34,6 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     distances[startVertex] = 0;
 
     while (unvisitedVertices.isNotEmpty) {
-      emit(state.copyWith(highlightedVertex: const Optional<Vertex?>(null)));
-      emit(state.copyWith(highlightedEdges: []));
       await Future.delayed(delayDuration);
 
       // Find the unvisited vertex with the smallest distance
@@ -43,8 +41,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
         return distances[a]! < distances[b]! ? a : b;
       });
 
-      emit(state.copyWith(highlightedVertex: Optional<Vertex>(currentVertex)));
-      // print('Current vertex: ${currentVertex.id}');
+      emit(state.copyWith(currentVertex: Optional<Vertex>(currentVertex)));
       await Future.delayed(delayDuration);
 
       // Remove the current vertex from the unvisited set
@@ -53,14 +50,19 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
       // Get all the edges starting from the current vertex
       final currentEdges =
           edges.where((edge) => edge.startVertex == currentVertex);
-      print('Current edges: ${currentEdges.map((e) => e.endVertex.id).toList()}');
 
-      emit(state.copyWith(highlightedEdges: currentEdges.toList()));
+      emit(state.copyWith(currVertexEdges: currentEdges.toList()));
       await Future.delayed(delayDuration);
 
       for (var edge in currentEdges) {
-        final neighbor = edge.endVertex;
-        if (!unvisitedVertices.contains(neighbor)) continue;
+        emit(state.copyWith(currentEdge: Optional<Edge>(edge)));
+        await Future.delayed(delayDuration);
+
+        final neighbor = edge.endVertex; // todo:: maybe set this dynamically
+        if (!unvisitedVertices.contains(neighbor)) {
+          emit(state.copyWith(currentEdge: const Optional<Edge?>(null)));
+          continue;
+        }
 
         final newDist = distances[currentVertex]! + edge.weight;
 
@@ -69,7 +71,15 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
           distances[neighbor] = newDist;
           previousVertices[neighbor] = currentVertex;
         }
+
+        emit(state.copyWith(currentEdge: const Optional<Edge?>(null)));
+        if (edge != currentEdges.last) {
+          await Future.delayed(delayDuration);
+        }
       }
+
+      emit(state.copyWith(currVertexEdges: []));
+      emit(state.copyWith(currentVertex: const Optional<Vertex?>(null)));
     }
 
     return Result(distances, previousVertices);

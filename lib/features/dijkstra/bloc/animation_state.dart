@@ -4,34 +4,39 @@ class AnimationState extends Equatable {
   AnimationState({
     vertices,
     edges,
-    this.highlightedVertex,
-    this.highlightedEdges = const [],
+    this.currentVertex,
+    this.currentEdge,
+    this.currVertexEdges = const [],
   }) : vertices = vertices ?? [], edges = edges ?? [];
 
   final List<Vertex> vertices;
   final List<Edge> edges;
-  final Vertex? highlightedVertex;
-  final List<Edge> highlightedEdges;
+  final Vertex? currentVertex;
+  final List<Edge> currVertexEdges;
+  final Edge? currentEdge;
 
   @override
   List<Object?> get props => [
     vertices,
     edges,
-    highlightedVertex,
-    highlightedEdges,
+    currentVertex,
+    currentEdge,
+    currVertexEdges,
   ];
 
   AnimationState copyWith({
     List<Vertex>? vertices,
     List<Edge>? edges,
-    Optional<Vertex?>? highlightedVertex,
-    List<Edge>? highlightedEdges,
+    Optional<Vertex?>? currentVertex,
+    Optional<Edge?>? currentEdge,
+    List<Edge>? currVertexEdges,
   }) {
     return AnimationState(
       vertices: vertices ?? this.vertices,
       edges: edges ?? this.edges,
-      highlightedVertex: highlightedVertex == null ? this.highlightedVertex : highlightedVertex.value,
-      highlightedEdges: highlightedEdges ?? this.highlightedEdges,
+      currentVertex: currentVertex == null ? this.currentVertex : currentVertex.value,
+      currentEdge: currentEdge == null ? this.currentEdge : currentEdge.value,
+      currVertexEdges: currVertexEdges ?? this.currVertexEdges,
     );
   }
 }

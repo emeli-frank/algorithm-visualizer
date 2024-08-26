@@ -268,8 +268,9 @@ class DijkstraCanvas extends StatelessWidget {
                     startVertex: context.watch<GraphBloc>().state.startVertex?.offset,
                     selectedVertexID: context.watch<GraphBloc>().state.selectedVertexID,
                     selectedEdgeID: context.watch<GraphBloc>().state.selectedEdgeID,
-                    currentVertexID: context.watch<AnimationBloc>().state.highlightedVertex?.id,
-                    currentEdges: context.watch<AnimationBloc>().state.highlightedEdges,
+                    currentVertexID: context.watch<AnimationBloc>().state.currentVertex?.id,
+                    currentEdgeID: context.watch<AnimationBloc>().state.currentEdge?.id,
+                    currVertexEdges: context.watch<AnimationBloc>().state.currVertexEdges,
                   ),
                 ),
                 Visibility(
@@ -342,7 +343,8 @@ class GraphPainter extends CustomPainter {
     this.selectedVertexID,
     this.selectedEdgeID,
     this.currentVertexID,
-    this.currentEdges = const [],
+    this.currentEdgeID,
+    this.currVertexEdges = const [],
   });
 
   final List<Vertex> vertices;
@@ -353,7 +355,8 @@ class GraphPainter extends CustomPainter {
   final String? selectedVertexID;
   final String? selectedEdgeID;
   final String? currentVertexID;
-  final List<Edge> currentEdges;
+  final String? currentEdgeID;
+  final List<Edge> currVertexEdges;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -441,14 +444,20 @@ class GraphPainter extends CustomPainter {
       ..color = Colors.orange
       ..strokeWidth = 4;
 
-    final currentEdgePaint = Paint()
+    final currVertexEdgesPaint = Paint()
       ..color = Colors.red
+      ..strokeWidth = 6;
+
+    final currentEdgePaint = Paint()
+      ..color = Colors.green
       ..strokeWidth = 6;
 
     for (var edge in edges) {
       Paint paint;
-      if (currentEdges.contains(edge)) {
+      if (edge.id == currentEdgeID) {
         paint = currentEdgePaint;
+      } else if (currVertexEdges.contains(edge)) {
+        paint = currVertexEdgesPaint;
       } else {
         paint = edge.id == selectedEdgeID ? selectedEdgePaint : edgePaint;
       }
@@ -499,7 +508,8 @@ class GraphPainter extends CustomPainter {
         oldDelegate.selectedVertexID != selectedVertexID ||
         oldDelegate.selectedEdgeID != selectedEdgeID ||
         oldDelegate.currentVertexID != currentVertexID ||
-        oldDelegate.currentEdges != currentEdges;
+        oldDelegate.currVertexEdges != currVertexEdges ||
+        oldDelegate.currentEdgeID != currentEdgeID;
   }
 }
 
