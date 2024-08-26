@@ -268,6 +268,8 @@ class DijkstraCanvas extends StatelessWidget {
                     startVertex: context.watch<GraphBloc>().state.startVertex?.offset,
                     selectedVertexID: context.watch<GraphBloc>().state.selectedVertexID,
                     selectedEdgeID: context.watch<GraphBloc>().state.selectedEdgeID,
+                    currentVertexID: context.watch<AnimationBloc>().state.highlightedVertex?.id,
+                    currentEdges: context.watch<AnimationBloc>().state.highlightedEdges,
                   ),
                 ),
                 Visibility(
@@ -339,6 +341,8 @@ class GraphPainter extends CustomPainter {
     this.startVertex,
     this.selectedVertexID,
     this.selectedEdgeID,
+    this.currentVertexID,
+    this.currentEdges = const [],
   });
 
   final List<Vertex> vertices;
@@ -348,6 +352,8 @@ class GraphPainter extends CustomPainter {
   final Offset? startVertex;
   final String? selectedVertexID;
   final String? selectedEdgeID;
+  final String? currentVertexID;
+  final List<Edge> currentEdges;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -363,6 +369,10 @@ class GraphPainter extends CustomPainter {
     const vertexFillColor = Colors.white;
     const vertexFocusedFillColor = Colors.orange;
 
+    final vertexFillPaint2 = Paint()
+      ..color = Colors.red
+      ..style = PaintingStyle.fill;
+
     final vertexFillPaint = Paint()
       ..color = vertexFillColor
       ..style = PaintingStyle.fill;
@@ -377,12 +387,19 @@ class GraphPainter extends CustomPainter {
       ..strokeWidth = borderThickness;
 
     for (var vertex in vertices) {
-      if (selectedVertexID != null && vertex.id == selectedVertexID) {
-        canvas.drawCircle(vertex.offset, vertexRadius, vertexFocusFillPaint);
+      if (currentVertexID != null && vertex.id == currentVertexID) {
+        canvas.drawCircle(vertex.offset, vertexRadius, vertexFillPaint2);
       } else {
-        canvas.drawCircle(vertex.offset, vertexRadius, vertexFillPaint);
+        if (selectedVertexID != null && vertex.id == selectedVertexID) {
+          canvas.drawCircle(vertex.offset, vertexRadius, vertexFocusFillPaint);
+        } else {
+          canvas.drawCircle(vertex.offset, vertexRadius, vertexFillPaint);
+        }
+        canvas.drawCircle(vertex.offset, vertexRadius - borderThickness + 2, vertexBorderPaint);
       }
-      canvas.drawCircle(vertex.offset, vertexRadius - borderThickness + 2, vertexBorderPaint);
+
+
+
 
       _drawVertexLabel(canvas, vertex);
     }
@@ -424,8 +441,18 @@ class GraphPainter extends CustomPainter {
       ..color = Colors.orange
       ..strokeWidth = 4;
 
+    final currentEdgePaint = Paint()
+      ..color = Colors.red
+      ..strokeWidth = 6;
+
     for (var edge in edges) {
-      Paint paint = edge.id == selectedEdgeID ? selectedEdgePaint : edgePaint;
+      Paint paint;
+      if (currentEdges.contains(edge)) {
+        paint = currentEdgePaint;
+      } else {
+        paint = edge.id == selectedEdgeID ? selectedEdgePaint : edgePaint;
+      }
+
       canvas.drawLine(edge.startVertex.offset, edge.endVertex.offset, paint);
 
       // Draw the weight
@@ -470,7 +497,9 @@ class GraphPainter extends CustomPainter {
         oldDelegate.temporaryEdgeEnd != temporaryEdgeEnd ||
         oldDelegate.startVertex != startVertex ||
         oldDelegate.selectedVertexID != selectedVertexID ||
-        oldDelegate.selectedEdgeID != selectedEdgeID;
+        oldDelegate.selectedEdgeID != selectedEdgeID ||
+        oldDelegate.currentVertexID != currentVertexID ||
+        oldDelegate.currentEdges != currentEdges;
   }
 }
 

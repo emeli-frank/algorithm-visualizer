@@ -1,6 +1,6 @@
 import 'package:algorithm_visualizer/features/dijkstra/models/edge.dart';
 import 'package:algorithm_visualizer/features/dijkstra/models/vertex.dart';
-import 'package:collection/collection.dart';
+import 'package:algorithm_visualizer/models/optional.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -9,18 +9,22 @@ part 'animation_event.dart';
 
 class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
   AnimationBloc() : super(AnimationState()) {
-    on<AnimationStarted>((AnimationStarted event, Emitter<AnimationState> emit) {
-      final result = _dijkstra(event.startVertex, event.vertices, event.edges);
-      print('result: \n$result');
+    on<AnimationStarted>((AnimationStarted event, Emitter<AnimationState> emit) async {
+      final result = await _dijkstra(emit, event.startVertex, event.vertices, event.edges);
+      print(result);
     });
   }
 
-  Result _dijkstra(Vertex startVertex, List<Vertex> vertices, List<Edge> edges) {
+  Future<Result> _dijkstra(
+      Emitter<AnimationState> emit,
+      Vertex startVertex,
+      List<Vertex> vertices,
+      List<Edge> edges) async {
+
+    const delayDuration = Duration(milliseconds: 1000); // todo:: obtain from use input
     final distances = <Vertex, double>{};
     final previousVertices = <Vertex, Vertex?>{};
-    final priorityQueue = PriorityQueue<Vertex>(
-          (a, b) => distances[a]!.compareTo(distances[b]!),
-    );
+    final unvisitedVertices = Set<Vertex>.from(vertices);
 
     // Initialize distances
     for (var vertex in vertices) {
@@ -29,28 +33,41 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     }
     distances[startVertex] = 0;
 
-    // Add all vertices to the priority queue
-    priorityQueue.addAll(vertices);
+    while (unvisitedVertices.isNotEmpty) {
+      emit(state.copyWith(highlightedVertex: const Optional<Vertex?>(null)));
+      emit(state.copyWith(highlightedEdges: []));
+      await Future.delayed(delayDuration);
 
-    while (priorityQueue.isNotEmpty) {
-      final currentVertex = priorityQueue.removeFirst();
+      // Find the unvisited vertex with the smallest distance
+      final currentVertex = unvisitedVertices.reduce((a, b) {
+        return distances[a]! < distances[b]! ? a : b;
+      });
+
+      emit(state.copyWith(highlightedVertex: Optional<Vertex>(currentVertex)));
+      // print('Current vertex: ${currentVertex.id}');
+      await Future.delayed(delayDuration);
+
+      // Remove the current vertex from the unvisited set
+      unvisitedVertices.remove(currentVertex);
 
       // Get all the edges starting from the current vertex
-      final currentEdges = edges.where((edge) =>
-      edge.startVertex == currentVertex);
+      final currentEdges =
+          edges.where((edge) => edge.startVertex == currentVertex);
+      print('Current edges: ${currentEdges.map((e) => e.endVertex.id).toList()}');
+
+      emit(state.copyWith(highlightedEdges: currentEdges.toList()));
+      await Future.delayed(delayDuration);
 
       for (var edge in currentEdges) {
         final neighbor = edge.endVertex;
+        if (!unvisitedVertices.contains(neighbor)) continue;
+
         final newDist = distances[currentVertex]! + edge.weight;
 
         // If the new distance is shorter
         if (newDist < distances[neighbor]!) {
           distances[neighbor] = newDist;
           previousVertices[neighbor] = currentVertex;
-
-          // Update the priority queue with the new distance
-          priorityQueue.remove(neighbor);
-          priorityQueue.add(neighbor);
         }
       }
     }
