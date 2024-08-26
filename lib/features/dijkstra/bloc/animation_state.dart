@@ -1,5 +1,13 @@
 part of 'animation_bloc.dart';
 
+enum AnimationStep {
+  findingCurrentVertex,
+  findingCurrentEdges,
+  findingCurrentEdge,
+  processingNextStep,
+  complete,
+}
+
 class AnimationState extends Equatable {
   AnimationState({
     vertices,
@@ -7,6 +15,9 @@ class AnimationState extends Equatable {
     this.currentVertex,
     this.currentEdge,
     this.currVertexEdges = const [],
+    this.step = AnimationStep.findingCurrentVertex,
+    this.isComplete = false,
+    this.isRunning = false,
   }) : vertices = vertices ?? [], edges = edges ?? [];
 
   final List<Vertex> vertices;
@@ -14,6 +25,9 @@ class AnimationState extends Equatable {
   final Vertex? currentVertex;
   final List<Edge> currVertexEdges;
   final Edge? currentEdge;
+  final AnimationStep step;
+  final bool isComplete;
+  final bool isRunning;
 
   @override
   List<Object?> get props => [
@@ -22,6 +36,9 @@ class AnimationState extends Equatable {
     currentVertex,
     currentEdge,
     currVertexEdges,
+    step,
+    isComplete,
+    isRunning,
   ];
 
   AnimationState copyWith({
@@ -30,6 +47,9 @@ class AnimationState extends Equatable {
     Optional<Vertex?>? currentVertex,
     Optional<Edge?>? currentEdge,
     List<Edge>? currVertexEdges,
+    Optional<AnimationStep>? step,
+    bool? isComplete,
+    bool? isRunning,
   }) {
     return AnimationState(
       vertices: vertices ?? this.vertices,
@@ -37,6 +57,9 @@ class AnimationState extends Equatable {
       currentVertex: currentVertex == null ? this.currentVertex : currentVertex.value,
       currentEdge: currentEdge == null ? this.currentEdge : currentEdge.value,
       currVertexEdges: currVertexEdges ?? this.currVertexEdges,
+      step: step == null ? this.step : step.value,
+      isComplete: isComplete ?? this.isComplete,
+      isRunning: isRunning ?? this.isRunning,
     );
   }
 }

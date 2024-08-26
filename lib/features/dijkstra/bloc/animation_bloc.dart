@@ -10,96 +10,150 @@ part 'animation_event.dart';
 class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
   AnimationBloc() : super(AnimationState()) {
     on<AnimationStarted>((AnimationStarted event, Emitter<AnimationState> emit) async {
-      final result = await _dijkstra(emit, event.startVertex, event.vertices, event.edges);
-      print(result);
+      _initializeDijkstra(emit, event);
+    });
+
+    on<AnimationEnded>((AnimationEnded event, Emitter<AnimationState> emit) async {
+      emit(state.copyWith(
+        isRunning: false,
+        isComplete: true,
+        currentEdge: const Optional<Edge?>(null),
+        currentVertex: const Optional<Vertex?>(null),
+        currVertexEdges: [],
+        edges: [],
+        vertices: [],
+      ));
+    });
+
+    on<AnimationNextStep>((event, emit) {
+      _processNextStep(event, emit, state);
     });
   }
 
-  Future<Result> _dijkstra(
-      Emitter<AnimationState> emit,
-      Vertex startVertex,
-      List<Vertex> vertices,
-      List<Edge> edges) async {
+  late List<Vertex> vertices;
+  late List<Edge> edges;
+  late Vertex currentVertex;
+  late Set<Vertex> unvisitedVertices;
+  late Map<Vertex, double> distances;
+  late Map<Vertex, Vertex?> previousVertices;
+  Edge? currentEdge;
+  List<Edge>? currVertexEdges;
 
-    const delayDuration = Duration(milliseconds: 1000); // todo:: obtain from use input
-    final distances = <Vertex, double>{};
-    final previousVertices = <Vertex, Vertex?>{};
-    final unvisitedVertices = Set<Vertex>.from(vertices);
+  void _initializeDijkstra(Emitter<AnimationState> emit, AnimationStarted event) {
+    vertices = event.vertices;
+    edges = event.edges;
+    currentVertex = event.startVertex;
+    unvisitedVertices = Set<Vertex>.from(vertices);
+    distances = {};
+    previousVertices = {};
 
-    // Initialize distances
     for (var vertex in vertices) {
       distances[vertex] = double.infinity;
       previousVertices[vertex] = null;
     }
-    distances[startVertex] = 0;
+    distances[currentVertex] = 0;
 
-    while (unvisitedVertices.isNotEmpty) {
-      await Future.delayed(delayDuration);
-
-      // Find the unvisited vertex with the smallest distance
-      final currentVertex = unvisitedVertices.reduce((a, b) {
-        return distances[a]! < distances[b]! ? a : b;
-      });
-
-      emit(state.copyWith(currentVertex: Optional<Vertex>(currentVertex)));
-      await Future.delayed(delayDuration);
-
-      // Remove the current vertex from the unvisited set
-      unvisitedVertices.remove(currentVertex);
-
-      // Get all the edges starting from the current vertex
-      final currentEdges =
-          edges.where((edge) => edge.startVertex == currentVertex);
-
-      emit(state.copyWith(currVertexEdges: currentEdges.toList()));
-      await Future.delayed(delayDuration);
-
-      for (var edge in currentEdges) {
-        emit(state.copyWith(currentEdge: Optional<Edge>(edge)));
-        await Future.delayed(delayDuration);
-
-        final neighbor = edge.endVertex; // todo:: maybe set this dynamically
-        if (!unvisitedVertices.contains(neighbor)) {
-          emit(state.copyWith(currentEdge: const Optional<Edge?>(null)));
-          continue;
-        }
-
-        final newDist = distances[currentVertex]! + edge.weight;
-
-        // If the new distance is shorter
-        if (newDist < distances[neighbor]!) {
-          distances[neighbor] = newDist;
-          previousVertices[neighbor] = currentVertex;
-        }
-
-        emit(state.copyWith(currentEdge: const Optional<Edge?>(null)));
-        if (edge != currentEdges.last) {
-          await Future.delayed(delayDuration);
-        }
-      }
-
-      emit(state.copyWith(currVertexEdges: []));
-      emit(state.copyWith(currentVertex: const Optional<Vertex?>(null)));
-    }
-
-    return Result(distances, previousVertices);
+    emit(state.copyWith(
+      isRunning: true,
+      isComplete: false,
+      step: const Optional<AnimationStep>(AnimationStep.findingCurrentVertex)),
+    );
   }
-}
 
-class Result {
-  final Map<Vertex, double> distances;
-  final Map<Vertex, Vertex?> previousVertices;
+  void _findCurrentVertex(Emitter<AnimationState> emit) {
+    // Find the unvisited vertex with the smallest distance
+    currentVertex = unvisitedVertices.reduce((a, b) {
+      return distances[a]! < distances[b]! ? a : b;
+    });
 
-  Result(this.distances, this.previousVertices);
+    // Remove the current vertex from the unvisited set
+    unvisitedVertices.remove(currentVertex);
 
-  @override
-  String toString() {
-    String output = 'Vertex, Distance, Previous';
-    for (var i = 0; i < distances.length; i++) {
-      output += '\n${distances.keys.elementAt(i).id},      '
-          '${distances.values.elementAt(i)},      '
-          '${previousVertices.values.elementAt(i)?.id ?? 'null'}';
+    emit(state.copyWith(
+      currentEdge: const Optional<Edge?>(null), // clear previous if existing
+      currVertexEdges: [], // clear previous if existing
+      currentVertex: Optional<Vertex>(currentVertex),
+      step: const Optional<AnimationStep>(AnimationStep.findingCurrentEdges)),
+    );
+  }
+
+  void _findCurrentEdges(Emitter<AnimationState> emit) {
+    // Get all the edges starting from the current vertex
+    currVertexEdges =
+        edges.where((edge) => edge.startVertex == currentVertex).toList();
+
+    emit(state.copyWith(
+        currVertexEdges: currVertexEdges,
+        step: const Optional<AnimationStep>(AnimationStep.findingCurrentEdge),
+    ));
+  }
+
+  void _findCurrentEdge(Emitter<AnimationState> emit) {
+    Optional<AnimationStep>? nextStep;
+    if (currVertexEdges!.length <= 1) {
+      nextStep = const Optional<AnimationStep>(AnimationStep.processingNextStep);
+      if (currVertexEdges!.isEmpty) {
+        emit(state.copyWith(
+          currentEdge: Optional<Edge>(currentEdge!),
+          step: nextStep,
+        ));
+        return;
+      }
     }
-    return output;
+
+    currentEdge = currVertexEdges!.removeAt(0);
+
+    final neighbor = currentEdge!.endVertex;
+    if (!unvisitedVertices.contains(neighbor)) {
+      emit(state.copyWith(currentEdge: const Optional<Edge?>(null)));
+      return;
+    }
+
+    final newDist = distances[currentVertex]! + currentEdge!.weight;
+
+    // If the new distance is shorter
+    if (newDist < distances[neighbor]!) {
+      distances[neighbor] = newDist;
+      previousVertices[neighbor] = currentVertex;
+    }
+
+    emit(state.copyWith(
+      currentEdge: Optional<Edge>(currentEdge!),
+      step: nextStep,
+    ));
+  }
+
+  void _processNextStep(AnimationNextStep event, Emitter<AnimationState> emit, AnimationState state) {
+    if (unvisitedVertices.isEmpty) {
+      emit(state.copyWith(isComplete: true));
+      return;
+    }
+
+    AnimationStep step = state.step;
+    if (state.step == AnimationStep.processingNextStep) {
+      step = AnimationStep.findingCurrentVertex;
+    }
+
+    switch(step) {
+      case AnimationStep.findingCurrentVertex:
+        _findCurrentVertex(emit);
+        break;
+      case AnimationStep.findingCurrentEdges:
+        _findCurrentEdges(emit);
+        break;
+      case AnimationStep.findingCurrentEdge:
+        _findCurrentEdge(emit);
+        break;
+      case AnimationStep.processingNextStep:
+        _processNextStep(event, emit, state);
+        break;
+      case AnimationStep.complete:
+        break;
+    }
+
+    // If there are no more vertices to visit, the algorithm is complete
+    /*if (unvisitedVertices.isEmpty) {
+      emit(state.copyWith(isComplete: true));
+    }*/
   }
 }

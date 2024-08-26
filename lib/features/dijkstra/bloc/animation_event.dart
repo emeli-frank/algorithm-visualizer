@@ -16,3 +16,7 @@ final class AnimationStarted extends AnimationEvent {
   final List<Vertex> vertices;
   final List<Edge> edges;
 }
+
+final class AnimationNextStep extends AnimationEvent {}
+
+final class AnimationEnded extends AnimationEvent {}

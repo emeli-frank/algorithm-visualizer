@@ -302,23 +302,48 @@ class DijkstraCanvas extends StatelessWidget {
                     color: Colors.white,
                     child: Row(
                       children: [
-                        IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.skip_previous_outlined),
+                        Visibility(
+                          visible: !context.watch<AnimationBloc>().state.isRunning,
+                          child: TextButton(
+                            onPressed: () {
+                              context.read<AnimationBloc>().add(AnimationStarted(
+                                startVertex: context.read<GraphBloc>().state.vertices.first, // todo:: should be selected dynamically
+                                vertices: context.read<GraphBloc>().state.vertices,
+                                edges: context.read<GraphBloc>().state.edges,
+                              ));
+                            },
+                            child: const Text('Start'),
+                          ),
                         ),
-                        IconButton(
-                          onPressed: () {
-                            context.read<AnimationBloc>().add(AnimationStarted(
-                              startVertex: context.read<GraphBloc>().state.vertices.first, // todo:: should be selected dynamically
-                              vertices: context.read<GraphBloc>().state.vertices,
-                              edges: context.read<GraphBloc>().state.edges,
-                            ));
-                          },
-                          icon: const Icon(Icons.play_arrow_outlined),
+                        Visibility(
+                          visible: context.watch<AnimationBloc>().state.isRunning,
+                          child: TextButton(
+                            onPressed: () {
+                              context.read<AnimationBloc>().add(AnimationEnded());
+                            },
+                            child: const Text('End'),
+                          ),
                         ),
-                        IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.skip_next_outlined),
+                        Visibility(
+                          visible: context.watch<AnimationBloc>().state.isRunning,
+                          child: Row(
+                            children: [
+                              IconButton(
+                                onPressed: () {},
+                                icon: const Icon(Icons.skip_previous_outlined),
+                              ),
+                              IconButton(
+                                onPressed: () {},
+                                icon: const Icon(Icons.play_arrow_outlined),
+                              ),
+                              IconButton(
+                                onPressed: context.watch<AnimationBloc>().state.isComplete ? null : () {
+                                  context.read<AnimationBloc>().add(AnimationNextStep());
+                                },
+                                icon: const Icon(Icons.skip_next_outlined),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
