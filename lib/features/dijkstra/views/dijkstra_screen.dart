@@ -30,8 +30,8 @@ class DijkstraScreen extends StatelessWidget {
 class DijkstraCanvas extends StatelessWidget {
   const DijkstraCanvas({super.key});
 
-  final vertexRadius = 25.0;
-  final edgeThickness = 2.0;
+  final vertexRadius = 16.0;
+  final edgeThickness = 1.0;
   final edgeClickableThickness = 8.0;
 
   bool _isPointOnLineSegment(double x1, double y1, double x2, double y2, double x, double y, double thickness) {
@@ -276,6 +276,7 @@ class DijkstraCanvas extends StatelessWidget {
                     vertices: context.watch<GraphBloc>().state.vertices,
                     edges: context.watch<GraphBloc>().state.edges,
                     vertexRadius: vertexRadius,
+                    edgeThickness: edgeThickness,
                     temporaryEdgeEnd: context.watch<GraphBloc>().state.temporaryEdgeEnd,
                     startVertex: context.watch<GraphBloc>().state.startVertex?.offset,
                     selectedVertexID: context.watch<GraphBloc>().state.selectedVertexID,
@@ -398,6 +399,7 @@ class DijkstraCanvas extends StatelessWidget {
 class GraphPainter extends CustomPainter {
   GraphPainter({
     required this.vertexRadius,
+    required this.edgeThickness,
     required this.vertices,
     required this.edges,
     this.temporaryEdgeEnd,
@@ -412,6 +414,7 @@ class GraphPainter extends CustomPainter {
   final List<Vertex> vertices;
   final List<Edge> edges;
   final double vertexRadius;
+  final double edgeThickness;
   final Offset? temporaryEdgeEnd;
   final Offset? startVertex;
   final String? selectedVertexID;
@@ -430,13 +433,9 @@ class GraphPainter extends CustomPainter {
   }
 
   void _drawVertices(Canvas canvas) {
-    const borderThickness = 4.0;
+    const borderThickness = 1.0;
     const vertexFillColor = Colors.white;
     const vertexFocusedFillColor = Colors.orange;
-
-    final vertexFillPaint2 = Paint()
-      ..color = Colors.red
-      ..style = PaintingStyle.fill;
 
     final vertexFillPaint = Paint()
       ..color = vertexFillColor
@@ -446,26 +445,33 @@ class GraphPainter extends CustomPainter {
       ..color = vertexFocusedFillColor
       ..style = PaintingStyle.fill;
 
+    final currentVertexFillPaint = Paint()
+      ..color = Colors.green
+      ..style = PaintingStyle.fill;
+
     final vertexBorderPaint = Paint()
-      ..color = Colors.blue
+      ..color = Colors.black
       ..style = PaintingStyle.stroke
       ..strokeWidth = borderThickness;
 
+    // Iterate through all vertices
     for (var vertex in vertices) {
+      // Determine which paint to use based on the vertex state
+      Paint fillPaint = vertexFillPaint; // Default fill paint
+
       if (currentVertexID != null && vertex.id == currentVertexID) {
-        canvas.drawCircle(vertex.offset, vertexRadius, vertexFillPaint2);
-      } else {
-        if (selectedVertexID != null && vertex.id == selectedVertexID) {
-          canvas.drawCircle(vertex.offset, vertexRadius, vertexFocusFillPaint);
-        } else {
-          canvas.drawCircle(vertex.offset, vertexRadius, vertexFillPaint);
-        }
-        canvas.drawCircle(vertex.offset, vertexRadius - borderThickness + 2, vertexBorderPaint);
+        fillPaint = currentVertexFillPaint;
+      } else if (selectedVertexID != null && vertex.id == selectedVertexID) {
+        fillPaint = vertexFocusFillPaint;
       }
 
+      // Draw the filled circle
+      canvas.drawCircle(vertex.offset, vertexRadius, fillPaint);
 
+      // Draw the border circle
+      canvas.drawCircle(vertex.offset, vertexRadius - borderThickness, vertexBorderPaint);
 
-
+      // Draw the label
       _drawVertexLabel(canvas, vertex);
     }
   }
@@ -498,36 +504,42 @@ class GraphPainter extends CustomPainter {
   }
 
   void _drawEdges(Canvas canvas) {
+    // Define paint styles for different edge states
     final edgePaint = Paint()
       ..color = Colors.black
-      ..strokeWidth = 2;
+      ..strokeWidth = edgeThickness;
 
     final selectedEdgePaint = Paint()
       ..color = Colors.orange
-      ..strokeWidth = 4;
+      ..strokeWidth = edgeThickness + 2;
 
-    final currVertexEdgesPaint = Paint()
-      ..color = Colors.red
-      ..strokeWidth = 6;
+    final currentVertexEdgesPaint = Paint()
+      ..color = Colors.black
+      ..strokeWidth = edgeThickness + 1.5;
 
     final currentEdgePaint = Paint()
       ..color = Colors.green
-      ..strokeWidth = 6;
+      ..strokeWidth = edgeThickness + 1.5;
 
+    // Iterate through all edges and determine the appropriate paint for each
     for (var edge in edges) {
       Paint paint;
+
+      // Determine paint based on edge's state
       if (edge.id == currentEdgeID) {
         paint = currentEdgePaint;
       } else if (currVertexEdges.contains(edge)) {
-        paint = currVertexEdgesPaint;
+        paint = currentVertexEdgesPaint;
+      } else if (edge.id == selectedEdgeID) {
+        paint = selectedEdgePaint;
       } else {
-        paint = edge.id == selectedEdgeID ? selectedEdgePaint : edgePaint;
+        paint = edgePaint;
       }
 
+      // Draw the edge
       canvas.drawLine(edge.startVertex.offset, edge.endVertex.offset, paint);
 
-      // Draw the weight
-      // Calculate the midpoint for the weight label
+      // Draw the weight label at the midpoint of the edge
       final midPoint = Offset(
         (edge.startVertex.offset.dx + edge.endVertex.offset.dx) / 2,
         (edge.startVertex.offset.dy + edge.endVertex.offset.dy) / 2,
@@ -556,8 +568,13 @@ class GraphPainter extends CustomPainter {
       textPainter.paint(canvas, offset);
     }
 
+    // Draw a temporary edge if necessary (e.g., during edge creation)
     if (startVertex != null && temporaryEdgeEnd != null) {
-      canvas.drawLine(startVertex!, temporaryEdgeEnd!, edgePaint..color = Colors.grey);
+      canvas.drawLine(
+        startVertex!,
+        temporaryEdgeEnd!,
+        edgePaint..color = Colors.grey,
+      );
     }
   }
 
