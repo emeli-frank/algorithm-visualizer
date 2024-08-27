@@ -284,6 +284,8 @@ class DijkstraCanvas extends StatelessWidget {
                     currentVertexID: context.watch<AnimationBloc>().state.currentVertex?.id,
                     currentEdgeID: context.watch<AnimationBloc>().state.currentEdge?.id,
                     currVertexEdges: context.watch<AnimationBloc>().state.currVertexEdges,
+                    neighbors: context.watch<AnimationBloc>().state.neighbors,
+                    currentNeighbor: context.watch<AnimationBloc>().state.currentNeighbor,
                   ),
                 ),
                 Visibility(
@@ -409,6 +411,8 @@ class GraphPainter extends CustomPainter {
     this.currentVertexID,
     this.currentEdgeID,
     this.currVertexEdges = const [],
+    required this.neighbors,
+    this.currentNeighbor,
   });
 
   final List<Vertex> vertices;
@@ -422,6 +426,8 @@ class GraphPainter extends CustomPainter {
   final String? currentVertexID;
   final String? currentEdgeID;
   final List<Edge> currVertexEdges;
+  final List<Vertex> neighbors;
+  final Vertex? currentNeighbor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -449,13 +455,27 @@ class GraphPainter extends CustomPainter {
       ..color = Colors.green
       ..style = PaintingStyle.fill;
 
+    final neighborsFillPaint = Paint()
+      ..color = Colors.yellow
+      ..style = PaintingStyle.fill;
+
+    final currentNeighborsFillPaint = Paint()
+      ..color = Colors.yellow
+      ..style = PaintingStyle.fill;
+
     final vertexBorderPaint = Paint()
       ..color = Colors.black
       ..style = PaintingStyle.stroke
       ..strokeWidth = borderThickness;
 
+    final thickVertexBorderPaint = Paint()
+      ..color = Colors.black
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = borderThickness + 1.5;
+
     // Iterate through all vertices
     for (var vertex in vertices) {
+      bool hasThickBorder = true;
       // Determine which paint to use based on the vertex state
       Paint fillPaint = vertexFillPaint; // Default fill paint
 
@@ -463,13 +483,24 @@ class GraphPainter extends CustomPainter {
         fillPaint = currentVertexFillPaint;
       } else if (selectedVertexID != null && vertex.id == selectedVertexID) {
         fillPaint = vertexFocusFillPaint;
+      } else if (currentNeighbor != null && currentNeighbor!.id == vertex.id) {
+        fillPaint = currentNeighborsFillPaint;
+      } else if (neighbors.contains(vertex)) {
+        hasThickBorder = false;
+        fillPaint = neighborsFillPaint;
+      } else {
+        hasThickBorder = false;
       }
 
       // Draw the filled circle
       canvas.drawCircle(vertex.offset, vertexRadius, fillPaint);
 
       // Draw the border circle
-      canvas.drawCircle(vertex.offset, vertexRadius - borderThickness, vertexBorderPaint);
+      if (hasThickBorder) {
+        canvas.drawCircle(vertex.offset, vertexRadius - borderThickness, thickVertexBorderPaint);
+      } else {
+        canvas.drawCircle(vertex.offset, vertexRadius - borderThickness, vertexBorderPaint);
+      }
 
       // Draw the label
       _drawVertexLabel(canvas, vertex);
@@ -518,7 +549,7 @@ class GraphPainter extends CustomPainter {
       ..strokeWidth = edgeThickness + 1.5;
 
     final currentEdgePaint = Paint()
-      ..color = Colors.green
+      ..color = Colors.black
       ..strokeWidth = edgeThickness + 1.5;
 
     // Iterate through all edges and determine the appropriate paint for each
@@ -588,7 +619,9 @@ class GraphPainter extends CustomPainter {
         oldDelegate.selectedEdgeID != selectedEdgeID ||
         oldDelegate.currentVertexID != currentVertexID ||
         oldDelegate.currVertexEdges != currVertexEdges ||
-        oldDelegate.currentEdgeID != currentEdgeID;
+        oldDelegate.currentEdgeID != currentEdgeID ||
+        oldDelegate.neighbors != neighbors ||
+        oldDelegate.currentNeighbor != currentNeighbor;
   }
 }
 

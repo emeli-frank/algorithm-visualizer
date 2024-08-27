@@ -15,6 +15,8 @@ class AnimationState extends Equatable {
     this.currentVertex,
     this.currentEdge,
     this.currVertexEdges = const [],
+    this.neighbors = const [],
+    this.currentNeighbor,
     this.step = AnimationStep.findingCurrentVertex,
     this.isComplete = false,
     this.isRunning = false,
@@ -27,6 +29,8 @@ class AnimationState extends Equatable {
   final Vertex? currentVertex;
   final List<Edge> currVertexEdges;
   final Edge? currentEdge;
+  final List<Vertex> neighbors;
+  final Vertex? currentNeighbor;
   final AnimationStep step;
   final bool isComplete;
   final bool isRunning;
@@ -45,6 +49,8 @@ class AnimationState extends Equatable {
     isRunning,
     distances,
     previousVertices,
+    neighbors,
+    currentNeighbor,
   ];
 
   AnimationState copyWith({
@@ -58,6 +64,8 @@ class AnimationState extends Equatable {
     bool? isRunning,
     Map<Vertex, double>? distances,
     Map<Vertex, Vertex?>? previousVertices,
+    List<Vertex>? neighbors,
+    Optional<Vertex?>? currentNeighbor,
   }) {
     return AnimationState(
       vertices: vertices ?? this.vertices,
@@ -70,6 +78,8 @@ class AnimationState extends Equatable {
       isRunning: isRunning ?? this.isRunning,
       distances: distances ?? this.distances,
       previousVertices: previousVertices ?? this.previousVertices,
+      neighbors: neighbors ?? this.neighbors,
+      currentNeighbor: currentNeighbor == null ? this.currentNeighbor : currentNeighbor.value,
     );
   }
 }

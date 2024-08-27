@@ -24,6 +24,8 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
         vertices: [],
         distances: {},
         previousVertices: {},
+        neighbors: [],
+        currentNeighbor: const Optional<Vertex?>(null),
       ));
     });
 
@@ -38,6 +40,8 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
         vertices: [],
         distances: {},
         previousVertices: {},
+        neighbors: [],
+        currentNeighbor: const Optional<Vertex?>(null),
       ));
     });
 
@@ -90,6 +94,8 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
       currentEdge: const Optional<Edge?>(null), // clear previous if existing
       currVertexEdges: [], // clear previous if existing
       currentVertex: Optional<Vertex>(currentVertex),
+      neighbors: [],
+      currentNeighbor: const Optional<Vertex?>(null),
       step: const Optional<AnimationStep>(AnimationStep.findingCurrentEdges)),
     );
   }
@@ -99,8 +105,14 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     currVertexEdges =
         edges.where((edge) => edge.startVertex == currentVertex).toList();
 
+    List<Vertex> neighbors = [];
+    for (var edge in currVertexEdges!) {
+      neighbors.add(edge.endVertex);
+    }
+
     emit(state.copyWith(
         currVertexEdges: currVertexEdges,
+        neighbors: neighbors,
         step: const Optional<AnimationStep>(AnimationStep.findingCurrentEdge),
     ));
   }
@@ -140,6 +152,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
       distances: distances,
       previousVertices: previousVertices,
       currentEdge: Optional<Edge>(currentEdge!),
+      currentNeighbor: Optional(neighbor),
       step: nextStep,
     ));
   }
