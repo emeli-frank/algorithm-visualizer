@@ -20,3 +20,5 @@ final class AnimationStarted extends AnimationEvent {
 final class AnimationNextStep extends AnimationEvent {}
 
 final class AnimationEnded extends AnimationEvent {}
+
+final class AnimationReset extends AnimationEvent {}

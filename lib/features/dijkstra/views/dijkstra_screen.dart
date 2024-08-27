@@ -6,7 +6,6 @@ import 'package:algorithm_visualizer/features/dijkstra/cubit/tool_selection_cubi
 import 'package:algorithm_visualizer/features/dijkstra/models/edge.dart';
 import 'package:algorithm_visualizer/features/dijkstra/models/vertex.dart';
 import 'package:algorithm_visualizer/utils/extensions/offset_extensions.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -290,6 +289,31 @@ class DijkstraCanvas extends StatelessWidget {
                           }
                         },
                       ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 60,
+                  child: Container(
+                    width: 200.0,
+                    height: 400.0,
+                    child: ListView.builder(
+                      itemCount: context.watch<AnimationBloc>().state.distances.length,
+                      itemBuilder: (context, index) {
+                        var distance = context.watch<AnimationBloc>().state.distances.values.toList()[index];
+                        var previous = context.watch<AnimationBloc>().state.previousVertices.values.toList()[index];
+                        var vertex = context.watch<AnimationBloc>().state.distances.keys.toList()[index];
+                        return Row(
+                          children: [
+                            Text(vertex.id),
+                            const SizedBox(width: 24.0),
+                            Text(distance.toString()),
+                            const SizedBox(width: 24.0),
+                            Text(previous?.id ?? 'null'),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ),

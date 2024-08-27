@@ -10,7 +10,7 @@ part 'animation_event.dart';
 class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
   AnimationBloc() : super(AnimationState()) {
     on<AnimationStarted>((AnimationStarted event, Emitter<AnimationState> emit) async {
-      _initializeDijkstra(emit, event);
+      _initializeDijkstra(emit, state, event);
     });
 
     on<AnimationEnded>((AnimationEnded event, Emitter<AnimationState> emit) async {
@@ -22,6 +22,22 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
         currVertexEdges: [],
         edges: [],
         vertices: [],
+        distances: {},
+        previousVertices: {},
+      ));
+    });
+
+    on<AnimationReset>((AnimationReset event, Emitter<AnimationState> emit) async {
+      emit(state.copyWith(
+        isRunning: false,
+        isComplete: true,
+        currentEdge: const Optional<Edge?>(null),
+        currentVertex: const Optional<Vertex?>(null),
+        currVertexEdges: [],
+        edges: [],
+        vertices: [],
+        distances: {},
+        previousVertices: {},
       ));
     });
 
@@ -34,19 +50,17 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
   late List<Edge> edges;
   late Vertex currentVertex;
   late Set<Vertex> unvisitedVertices;
-  late Map<Vertex, double> distances;
-  late Map<Vertex, Vertex?> previousVertices;
   Edge? currentEdge;
   List<Edge>? currVertexEdges;
 
-  void _initializeDijkstra(Emitter<AnimationState> emit, AnimationStarted event) {
+  void _initializeDijkstra(Emitter<AnimationState> emit, AnimationState state, AnimationStarted event) {
     vertices = event.vertices;
     edges = event.edges;
     currentVertex = event.startVertex;
     unvisitedVertices = Set<Vertex>.from(vertices);
-    distances = {};
-    previousVertices = {};
 
+    final Map<Vertex, double> distances = {};
+    final Map<Vertex, Vertex?> previousVertices = {};
     for (var vertex in vertices) {
       distances[vertex] = double.infinity;
       previousVertices[vertex] = null;
@@ -54,14 +68,17 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     distances[currentVertex] = 0;
 
     emit(state.copyWith(
+      previousVertices: previousVertices,
+      distances: distances,
       isRunning: true,
       isComplete: false,
       step: const Optional<AnimationStep>(AnimationStep.findingCurrentVertex)),
     );
   }
 
-  void _findCurrentVertex(Emitter<AnimationState> emit) {
+  void _findCurrentVertex(AnimationState state, Emitter<AnimationState> emit) {
     // Find the unvisited vertex with the smallest distance
+    final distances = {...state.distances};
     currentVertex = unvisitedVertices.reduce((a, b) {
       return distances[a]! < distances[b]! ? a : b;
     });
@@ -88,7 +105,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     ));
   }
 
-  void _findCurrentEdge(Emitter<AnimationState> emit) {
+  void _findCurrentEdge(AnimationState state, Emitter<AnimationState> emit) {
     Optional<AnimationStep>? nextStep;
     if (currVertexEdges!.length <= 1) {
       nextStep = const Optional<AnimationStep>(AnimationStep.processingNextStep);
@@ -109,6 +126,8 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
       return;
     }
 
+    final distances = {...state.distances};
+    final previousVertices = {...state.previousVertices};
     final newDist = distances[currentVertex]! + currentEdge!.weight;
 
     // If the new distance is shorter
@@ -118,13 +137,15 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     }
 
     emit(state.copyWith(
+      distances: distances,
+      previousVertices: previousVertices,
       currentEdge: Optional<Edge>(currentEdge!),
       step: nextStep,
     ));
   }
 
   void _processNextStep(AnimationNextStep event, Emitter<AnimationState> emit, AnimationState state) {
-    if (unvisitedVertices.isEmpty) {
+    if (unvisitedVertices.isEmpty) { // todo:: see if to put the logic at the end
       emit(state.copyWith(isComplete: true));
       return;
     }
@@ -136,13 +157,13 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
 
     switch(step) {
       case AnimationStep.findingCurrentVertex:
-        _findCurrentVertex(emit);
+        _findCurrentVertex(state, emit);
         break;
       case AnimationStep.findingCurrentEdges:
         _findCurrentEdges(emit);
         break;
       case AnimationStep.findingCurrentEdge:
-        _findCurrentEdge(emit);
+        _findCurrentEdge(state, emit);
         break;
       case AnimationStep.processingNextStep:
         _processNextStep(event, emit, state);

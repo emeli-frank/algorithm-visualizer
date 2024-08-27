@@ -19,67 +19,7 @@ class AppBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          DropdownButton<GraphTemplate>(
-            value: GraphTemplate.custom,
-            items: const [
-              DropdownMenuItem(
-                value: GraphTemplate.custom,
-                child: Text('Custom'),
-              ),
-              DropdownMenuItem(
-                value: GraphTemplate.sample1,
-                child: Text('Sample 1'),
-              ),
-              DropdownMenuItem(
-                value: GraphTemplate.random,
-                child: Text('Random'),
-              ),
-            ],
-            onChanged: (value) {
-              List<Vertex> vertices = [];
-              List<Edge> edges = [];
-
-              switch (value) {
-                case GraphTemplate.custom:
-                  break;
-                case GraphTemplate.sample1:
-                  // todo:: move to a separate file
-                  vertices = const [
-                    Vertex(id: '1', offset: Offset(256.4, 61.8)),
-                    Vertex(id: '2', offset: Offset(82.5, 90.2)),
-                    Vertex(id: '3', offset: Offset(152.5, 131.1)),
-                    Vertex(id: '4', offset: Offset(248.2, 157.5)),
-                    Vertex(id: '5', offset: Offset(154.4, 39.5)),
-                    Vertex(id: '6', offset: Offset(91.5, 198.7)),
-                    Vertex(id: '7', offset: Offset(191.7, 219.2)),
-                  ];
-                  edges = [
-                    Edge(id: '1', startVertex: vertices[0], endVertex: vertices[1], weight: 2),
-                    Edge(id: '2', startVertex: vertices[0], endVertex: vertices[2], weight: 3),
-                    Edge(id: '3', startVertex: vertices[0], endVertex: vertices[3], weight: 1),
-                    Edge(id: '4', startVertex: vertices[1], endVertex: vertices[4], weight: 1),
-                    Edge(id: '5', startVertex: vertices[2], endVertex: vertices[5], weight: 2),
-                    Edge(id: '6', startVertex: vertices[3], endVertex: vertices[6], weight: 3),
-                    Edge(id: '7', startVertex: vertices[4], endVertex: vertices[6], weight: 1),
-                    Edge(id: '8', startVertex: vertices[5], endVertex: vertices[6], weight: 2),
-                  ];
-                  break;
-                case GraphTemplate.random:
-                  // todo:: refine this logic
-                  vertices = List.generate(8, (index) {
-                    return Vertex(
-                      id: index.toString(),
-                      offset: Offset(50 + Random().nextDouble() * 400, 50 + Random().nextDouble() * 400),
-                    );
-                  });
-                  break;
-                case null:
-                  // TODO: Handle this case.
-              }
-
-              context.read<GraphBloc>().add(GraphElementReset(vertices: vertices, edges: edges));
-            },
-          ),
+          const GraphTemplateDropdown(template: GraphTemplate.custom),
           Visibility(
             visible:
                 context.watch<GraphBloc>().state.selectedVertexID != null ||
@@ -172,3 +112,96 @@ class ToolBarButtons extends StatelessWidget {
     );
   }
 }
+
+class GraphTemplateDropdown extends StatefulWidget {
+  const GraphTemplateDropdown({super.key, required this.template});
+
+  final GraphTemplate template;
+
+  @override
+  State<GraphTemplateDropdown> createState() => _GraphTemplateDropdownState();
+}
+
+class _GraphTemplateDropdownState extends State<GraphTemplateDropdown> {
+  late GraphTemplate _template;
+
+  @override
+  void initState() {
+    super.initState();
+    _template = widget.template;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButton<GraphTemplate>(
+      value: _template,
+      items: [
+        DropdownMenuItem(
+          value: GraphTemplate.custom,
+          enabled: _template != GraphTemplate.custom,
+          child: const Text('Custom'),
+        ),
+        DropdownMenuItem(
+          value: GraphTemplate.sample1,
+          enabled: _template != GraphTemplate.sample1,
+          child: const Text('Sample 1'),
+        ),
+        const DropdownMenuItem(
+          value: GraphTemplate.random,
+          child: Text('Random'),
+        ),
+      ],
+      onChanged: (value) {
+        if (value == null ||
+            (value == _template && value != GraphTemplate.random)) return;
+
+        setState(() {
+          _template = value;
+        });
+
+        List<Vertex> vertices = [];
+        List<Edge> edges = [];
+
+        switch (value) {
+          case GraphTemplate.custom:
+            break;
+          case GraphTemplate.sample1:
+          // todo:: move to a separate file
+            vertices = const [
+              Vertex(id: '1', offset: Offset(256.4, 61.8)),
+              Vertex(id: '2', offset: Offset(82.5, 90.2)),
+              Vertex(id: '3', offset: Offset(152.5, 131.1)),
+              Vertex(id: '4', offset: Offset(248.2, 157.5)),
+              Vertex(id: '5', offset: Offset(154.4, 39.5)),
+              Vertex(id: '6', offset: Offset(91.5, 198.7)),
+              Vertex(id: '7', offset: Offset(191.7, 219.2)),
+            ];
+            edges = [
+              Edge(id: '1', startVertex: vertices[0], endVertex: vertices[1], weight: 2),
+              Edge(id: '2', startVertex: vertices[0], endVertex: vertices[2], weight: 3),
+              Edge(id: '3', startVertex: vertices[0], endVertex: vertices[3], weight: 1),
+              Edge(id: '4', startVertex: vertices[1], endVertex: vertices[4], weight: 1),
+              Edge(id: '5', startVertex: vertices[2], endVertex: vertices[5], weight: 2),
+              Edge(id: '6', startVertex: vertices[3], endVertex: vertices[6], weight: 3),
+              Edge(id: '7', startVertex: vertices[4], endVertex: vertices[6], weight: 1),
+              Edge(id: '8', startVertex: vertices[5], endVertex: vertices[6], weight: 2),
+            ];
+            break;
+          case GraphTemplate.random:
+          // todo:: refine this logic
+            vertices = List.generate(8, (index) {
+              return Vertex(
+                id: index.toString(),
+                offset: Offset(50 + Random().nextDouble() * 400, 50 + Random().nextDouble() * 400),
+              );
+            });
+            break;
+        }
+
+        context.read<AnimationBloc>().add(AnimationReset());
+        context.read<GraphBloc>().add(GraphElementReset(vertices: vertices, edges: edges));
+      },
+    );
+  }
+}
+
