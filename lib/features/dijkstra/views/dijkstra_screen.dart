@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:algorithm_visualizer/exceptions/max_allowed_vertex_exceeded_exception.dart';
 import 'package:algorithm_visualizer/features/dijkstra/bloc/animation_bloc.dart';
 import 'package:algorithm_visualizer/features/dijkstra/bloc/graph_bloc.dart';
 import 'package:algorithm_visualizer/features/dijkstra/cubit/tool_selection_cubit.dart';
@@ -85,10 +86,22 @@ class DijkstraCanvas extends StatelessWidget {
   }
 
   String _getNextVertexID(List<Vertex> vertices) {
-    if (vertices.isEmpty) {
-      return '0';
+    const upperLimit = 9;
+
+    final existingIDs = vertices.map((v) => v.id).toSet();
+
+    for (var number = 1; number <= upperLimit; number++) {
+      for (var letterCode = 'A'.codeUnitAt(0); letterCode <= 'Z'.codeUnitAt(0); letterCode++) {
+        final letter = String.fromCharCode(letterCode);
+        final potentialID = '$letter$number';
+
+        if (!existingIDs.contains(potentialID)) {
+          return potentialID;
+        }
+      }
     }
-    return (int.parse(vertices.last.id) + 1).toString();
+
+    throw MaxAllowedVertexExceededException();
   }
 
   void _startDraggingVertex(BuildContext context, Offset offset, List<Vertex> vertices) {

@@ -168,13 +168,13 @@ class _GraphTemplateDropdownState extends State<GraphTemplateDropdown> {
           case GraphTemplate.sample1:
           // todo:: move to a separate file
             vertices = const [
-              Vertex(id: '1', offset: Offset(256.4, 61.8)),
-              Vertex(id: '2', offset: Offset(82.5, 90.2)),
-              Vertex(id: '3', offset: Offset(152.5, 131.1)),
-              Vertex(id: '4', offset: Offset(248.2, 157.5)),
-              Vertex(id: '5', offset: Offset(154.4, 39.5)),
-              Vertex(id: '6', offset: Offset(91.5, 198.7)),
-              Vertex(id: '7', offset: Offset(191.7, 219.2)),
+              Vertex(id: 'A1', offset: Offset(256.4, 61.8)),
+              Vertex(id: 'B1', offset: Offset(82.5, 90.2)),
+              Vertex(id: 'C1', offset: Offset(152.5, 131.1)),
+              Vertex(id: 'D1', offset: Offset(248.2, 157.5)),
+              Vertex(id: 'E1', offset: Offset(154.4, 39.5)),
+              Vertex(id: 'F1', offset: Offset(91.5, 198.7)),
+              Vertex(id: 'G1', offset: Offset(191.7, 219.2)),
             ];
             edges = [
               Edge(id: '1', startVertex: vertices[0], endVertex: vertices[1], weight: 2),

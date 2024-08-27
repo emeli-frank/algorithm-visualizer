@@ -8,7 +8,12 @@ class Vertex extends Equatable {
   final String id;
   final Offset offset;
 
-  String get label => id;
+  String get label {
+    if (id.endsWith('1')) {
+      return id.substring(0, 1);
+    }
+    return id;
+  }
 
   @override
   List<Object> get props => [id, offset];
