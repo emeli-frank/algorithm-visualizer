@@ -323,13 +323,43 @@ class DijkstraCanvas extends StatelessWidget {
                         var distance = context.watch<AnimationBloc>().state.distances.values.toList()[index];
                         var previous = context.watch<AnimationBloc>().state.previousVertices.values.toList()[index];
                         var vertex = context.watch<AnimationBloc>().state.distances.keys.toList()[index];
+                        final visitedVertices = context.watch<AnimationBloc>().state.visitedEdges.map((e) => e.startVertex).toSet();
+                        final currentVertex = context.watch<AnimationBloc>().state.currentVertex;
+                        final currentNeighbor = context.watch<AnimationBloc>().state.currentNeighbor;
+                        Color textColor;
+
+                        if (visitedVertices.contains(vertex)) {
+                          textColor = Colors.black12;
+                        } else if (currentVertex != null && currentVertex.id == vertex.id) {
+                          textColor = Colors.green;
+                        } else if (currentNeighbor != null && currentNeighbor.id == vertex.id) {
+                          textColor = Colors.yellow;
+                        } else {
+                          textColor = Colors.black;
+                        }
+                        
                         return Row(
                           children: [
-                            Text(vertex.id),
+                            Text(
+                              vertex.label,
+                              style: TextStyle(
+                                color: textColor,
+                              ),
+                            ),
                             const SizedBox(width: 24.0),
-                            Text(distance.toString()),
+                            Text(
+                              distance.toString(),
+                              style: TextStyle(
+                                color: textColor,
+                              ),
+                            ),
                             const SizedBox(width: 24.0),
-                            Text(previous?.id ?? 'null'),
+                            Text(
+                              previous?.label ?? 'null',
+                              style: TextStyle(
+                                color: textColor,
+                              ),
+                            ),
                           ],
                         );
                       },

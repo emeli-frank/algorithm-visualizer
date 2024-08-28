@@ -57,6 +57,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
   late Vertex currentVertex;
   Edge? currentEdge;
   List<Edge>? currVertexEdges;
+  List<Edge> _visitedEdges = [];
 
   void _initializeDijkstra(Emitter<AnimationState> emit, AnimationState state, AnimationStarted event) {
     vertices = event.vertices;
@@ -100,14 +101,18 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
       neighbors: [],
       unvisitedVertices: updatedUnvisitedVertices,
       currentNeighbor: const Optional<Vertex?>(null),
+      visitedEdges: [...state.visitedEdges, ..._visitedEdges],
       step: const Optional<AnimationStep>(AnimationStep.findingCurrentEdges),
     ));
+
+    _visitedEdges = [];
   }
 
   void _findCurrentEdges(Emitter<AnimationState> emit) {
     // Get all the edges starting from the current vertex
     currVertexEdges =
         edges.where((edge) => edge.startVertex == currentVertex).toList();
+    _visitedEdges.addAll(currVertexEdges ?? []);
 
     List<Vertex> neighbors = [];
     for (var edge in currVertexEdges!) {
@@ -158,7 +163,6 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
       currentEdge: Optional<Edge>(currentEdge!),
       currentNeighbor: Optional(neighbor),
       step: nextStep,
-      visitedEdges: [...state.visitedEdges, currentEdge!],
     ));
   }
 
