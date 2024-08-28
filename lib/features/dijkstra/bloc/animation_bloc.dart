@@ -26,6 +26,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
         previousVertices: {},
         neighbors: [],
         currentNeighbor: const Optional<Vertex?>(null),
+        visitedEdges: [],
       ));
     });
 
@@ -42,6 +43,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
         previousVertices: {},
         neighbors: [],
         currentNeighbor: const Optional<Vertex?>(null),
+        visitedEdges: [],
       ));
     });
 
@@ -53,7 +55,6 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
   late List<Vertex> vertices;
   late List<Edge> edges;
   late Vertex currentVertex;
-  late Set<Vertex> unvisitedVertices;
   Edge? currentEdge;
   List<Edge>? currVertexEdges;
 
@@ -61,7 +62,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     vertices = event.vertices;
     edges = event.edges;
     currentVertex = event.startVertex;
-    unvisitedVertices = Set<Vertex>.from(vertices);
+    final unvisitedVertices = Set<Vertex>.from(vertices);
 
     final Map<Vertex, double> distances = {};
     final Map<Vertex, Vertex?> previousVertices = {};
@@ -74,6 +75,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     emit(state.copyWith(
       previousVertices: previousVertices,
       distances: distances,
+      unvisitedVertices: unvisitedVertices,
       isRunning: true,
       isComplete: false,
       step: const Optional<AnimationStep>(AnimationStep.findingCurrentVertex)),
@@ -83,21 +85,23 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
   void _findCurrentVertex(AnimationState state, Emitter<AnimationState> emit) {
     // Find the unvisited vertex with the smallest distance
     final distances = {...state.distances};
-    currentVertex = unvisitedVertices.reduce((a, b) {
+    currentVertex = state.unvisitedVertices.reduce((a, b) { // todo:: see if to get this directly from the state class
       return distances[a]! < distances[b]! ? a : b;
     });
 
     // Remove the current vertex from the unvisited set
-    unvisitedVertices.remove(currentVertex);
+    final updatedUnvisitedVertices = {...state.unvisitedVertices};
+    updatedUnvisitedVertices.remove(currentVertex);
 
     emit(state.copyWith(
       currentEdge: const Optional<Edge?>(null), // clear previous if existing
       currVertexEdges: [], // clear previous if existing
       currentVertex: Optional<Vertex>(currentVertex),
       neighbors: [],
+      unvisitedVertices: updatedUnvisitedVertices,
       currentNeighbor: const Optional<Vertex?>(null),
-      step: const Optional<AnimationStep>(AnimationStep.findingCurrentEdges)),
-    );
+      step: const Optional<AnimationStep>(AnimationStep.findingCurrentEdges),
+    ));
   }
 
   void _findCurrentEdges(Emitter<AnimationState> emit) {
@@ -133,7 +137,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     currentEdge = currVertexEdges!.removeAt(0);
 
     final neighbor = currentEdge!.endVertex;
-    if (!unvisitedVertices.contains(neighbor)) {
+    if (!state.unvisitedVertices.contains(neighbor)) {
       emit(state.copyWith(currentEdge: const Optional<Edge?>(null)));
       return;
     }
@@ -154,11 +158,12 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
       currentEdge: Optional<Edge>(currentEdge!),
       currentNeighbor: Optional(neighbor),
       step: nextStep,
+      visitedEdges: [...state.visitedEdges, currentEdge!],
     ));
   }
 
   void _processNextStep(AnimationNextStep event, Emitter<AnimationState> emit, AnimationState state) {
-    if (unvisitedVertices.isEmpty) { // todo:: see if to put the logic at the end
+    if (state.unvisitedVertices.isEmpty) { // todo:: see if to put the logic at the end
       emit(state.copyWith(isComplete: true));
       return;
     }

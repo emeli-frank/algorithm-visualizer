@@ -286,6 +286,9 @@ class DijkstraCanvas extends StatelessWidget {
                     currVertexEdges: context.watch<AnimationBloc>().state.currVertexEdges,
                     neighbors: context.watch<AnimationBloc>().state.neighbors,
                     currentNeighbor: context.watch<AnimationBloc>().state.currentNeighbor,
+                    unvisitedVertices: context.watch<AnimationBloc>().state.unvisitedVertices,
+                    isAnimationRunning: context.watch<AnimationBloc>().state.isRunning,
+                    visitedEdges: context.watch<AnimationBloc>().state.visitedEdges,
                   ),
                 ),
                 Visibility(
@@ -413,6 +416,9 @@ class GraphPainter extends CustomPainter {
     this.currVertexEdges = const [],
     required this.neighbors,
     this.currentNeighbor,
+    required this.unvisitedVertices,
+    required this.isAnimationRunning,
+    required this.visitedEdges,
   });
 
   final List<Vertex> vertices;
@@ -428,91 +434,78 @@ class GraphPainter extends CustomPainter {
   final List<Edge> currVertexEdges;
   final List<Vertex> neighbors;
   final Vertex? currentNeighbor;
+  final Set<Vertex> unvisitedVertices;
+  final bool isAnimationRunning;
+  final List<Edge> visitedEdges;
 
   @override
   void paint(Canvas canvas, Size size) {
     // Draw edges
-    _drawEdges(canvas);
+    _drawEdges(canvas, visitedEdges);
 
     // Draw vertices
     _drawVertices(canvas);
   }
 
-  void _drawVertices(Canvas canvas) {
-    const borderThickness = 1.0;
-    const vertexFillColor = Colors.white;
-    const vertexFocusedFillColor = Colors.orange;
+  void _drawVertex({
+    required Canvas canvas,
+    required Vertex vertex,
+    Color color = Colors.white,
+    bool hasThickBorder = false,
+    bool isVisited = false,
+  }) {
+    var borderThickness = hasThickBorder ? 2.5 : 1.0;
+    var borderColor = isVisited ? Colors.black12 : Colors.black;
+    color = isVisited ? const Color(0xFFEFF4E9) : color;
 
-    final vertexFillPaint = Paint()
-      ..color = vertexFillColor
+    final fillPaint = Paint()
+      ..color = color
       ..style = PaintingStyle.fill;
 
-    final vertexFocusFillPaint = Paint()
-      ..color = vertexFocusedFillColor
-      ..style = PaintingStyle.fill;
-
-    final currentVertexFillPaint = Paint()
-      ..color = Colors.green
-      ..style = PaintingStyle.fill;
-
-    final neighborsFillPaint = Paint()
-      ..color = Colors.yellow
-      ..style = PaintingStyle.fill;
-
-    final currentNeighborsFillPaint = Paint()
-      ..color = Colors.yellow
-      ..style = PaintingStyle.fill;
-
-    final vertexBorderPaint = Paint()
-      ..color = Colors.black
+    final borderPaint = Paint()
+      ..color = borderColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = borderThickness;
 
-    final thickVertexBorderPaint = Paint()
-      ..color = Colors.black
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = borderThickness + 1.5;
+    // Draw the filled circle
+    canvas.drawCircle(vertex.offset, vertexRadius, fillPaint);
+
+    // Draw the border circle
+    canvas.drawCircle(vertex.offset, vertexRadius - borderThickness + 1.5, borderPaint);
+  }
+
+  void _drawVertices(Canvas canvas) {
+    const vertexFocusedFillColor = Colors.orange;
 
     // Iterate through all vertices
     for (var vertex in vertices) {
-      bool hasThickBorder = true;
-      // Determine which paint to use based on the vertex state
-      Paint fillPaint = vertexFillPaint; // Default fill paint
+      var isVisited = !unvisitedVertices.contains(vertex) && currentVertexID != vertex.id && isAnimationRunning;
 
       if (currentVertexID != null && vertex.id == currentVertexID) {
-        fillPaint = currentVertexFillPaint;
+        _drawVertex(canvas: canvas, vertex: vertex, hasThickBorder: true, color: Colors.green, isVisited: isVisited);
       } else if (selectedVertexID != null && vertex.id == selectedVertexID) {
-        fillPaint = vertexFocusFillPaint;
+        _drawVertex(canvas: canvas, vertex: vertex, hasThickBorder: true, color: vertexFocusedFillColor, isVisited: isVisited);
       } else if (currentNeighbor != null && currentNeighbor!.id == vertex.id) {
-        fillPaint = currentNeighborsFillPaint;
+        _drawVertex(canvas: canvas, vertex: vertex, hasThickBorder: true, color: Colors.yellow, isVisited: isVisited);
       } else if (neighbors.contains(vertex)) {
-        hasThickBorder = false;
-        fillPaint = neighborsFillPaint;
+        _drawVertex(canvas: canvas, vertex: vertex, hasThickBorder: false, color: Colors.yellow, isVisited: isVisited);
       } else {
-        hasThickBorder = false;
-      }
-
-      // Draw the filled circle
-      canvas.drawCircle(vertex.offset, vertexRadius, fillPaint);
-
-      // Draw the border circle
-      if (hasThickBorder) {
-        canvas.drawCircle(vertex.offset, vertexRadius - borderThickness, thickVertexBorderPaint);
-      } else {
-        canvas.drawCircle(vertex.offset, vertexRadius - borderThickness, vertexBorderPaint);
+        _drawVertex(canvas: canvas, vertex: vertex, hasThickBorder: false, isVisited: isVisited);
       }
 
       // Draw the label
-      _drawVertexLabel(canvas, vertex);
+      _drawVertexLabel(canvas, vertex, isVisited);
     }
   }
 
-  void _drawVertexLabel(Canvas canvas, Vertex vertex) {
+  void _drawVertexLabel(Canvas canvas, Vertex vertex, bool isVisited) {
+    var color = isVisited ? Colors.black12 : Colors.black;
+
     // Prepare the label
     final textSpan = TextSpan(
       text: vertex.label,
-      style: const TextStyle(
-        color: Colors.black,
+      style: TextStyle(
+        color:color,
         fontSize: 14.0,
       ),
     );
@@ -534,7 +527,7 @@ class GraphPainter extends CustomPainter {
     textPainter.paint(canvas, textOffset);
   }
 
-  void _drawEdges(Canvas canvas) {
+  void _drawEdges(Canvas canvas, List<Edge> visitedEdges) {
     // Define paint styles for different edge states
     final edgePaint = Paint()
       ..color = Colors.black
@@ -554,6 +547,7 @@ class GraphPainter extends CustomPainter {
 
     // Iterate through all edges and determine the appropriate paint for each
     for (var edge in edges) {
+      var visited = visitedEdges.contains(edge) && currentEdgeID != edge.id; // todo:: compare ids instead?
       Paint paint;
 
       // Determine paint based on edge's state
@@ -564,7 +558,9 @@ class GraphPainter extends CustomPainter {
       } else if (edge.id == selectedEdgeID) {
         paint = selectedEdgePaint;
       } else {
-        paint = edgePaint;
+        paint = Paint()
+          ..color = visited ? Colors.black12 : Colors.black
+          ..strokeWidth = edgeThickness;
       }
 
       // Draw the edge
@@ -578,8 +574,8 @@ class GraphPainter extends CustomPainter {
 
       final textSpan = TextSpan(
         text: edge.weight.toString(),
-        style: const TextStyle(
-          color: Colors.black,
+        style: TextStyle(
+          color: visited ? Colors.black12 : Colors.black,
           fontSize: 16,
           fontWeight: FontWeight.bold,
         ),
@@ -621,7 +617,9 @@ class GraphPainter extends CustomPainter {
         oldDelegate.currVertexEdges != currVertexEdges ||
         oldDelegate.currentEdgeID != currentEdgeID ||
         oldDelegate.neighbors != neighbors ||
-        oldDelegate.currentNeighbor != currentNeighbor;
+        oldDelegate.currentNeighbor != currentNeighbor ||
+        oldDelegate.unvisitedVertices != unvisitedVertices ||
+        oldDelegate.visitedEdges != visitedEdges;
   }
 }
 
