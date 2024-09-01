@@ -10,6 +10,7 @@ class GraphState extends Equatable {
     this.startVertex,
     this.selectedVertexID,
     this.selectedEdgeID,
+    this.isEditing = false,
   })  : vertices = vertices ?? [],
         edges = edges ?? [];
 
@@ -34,6 +35,8 @@ class GraphState extends Equatable {
   // Represents the edge that is currently selected
   final String? selectedEdgeID;
 
+  final bool isEditing;
+
   bool get isDraggingVertex => draggedVertexID != null && dragStartOffset != null;
 
   Edge? get selectedEdge {
@@ -47,15 +50,16 @@ class GraphState extends Equatable {
 
   @override
   List<Object?> get props => [
-        vertices,
-        edges,
-        draggedVertexID,
-        dragStartOffset,
-        temporaryEdgeEnd,
-        startVertex,
-        selectedVertexID,
-        selectedEdgeID,
-      ];
+    vertices,
+    edges,
+    draggedVertexID,
+    dragStartOffset,
+    temporaryEdgeEnd,
+    startVertex,
+    selectedVertexID,
+    selectedEdgeID,
+    isEditing,
+  ];
 
   GraphState copyWith({
     List<Vertex>? vertices,
@@ -66,6 +70,7 @@ class GraphState extends Equatable {
     Optional<Vertex?>? startVertex,
     Optional<String?>? selectedVertexID,
     Optional<String?>? selectedEdgeID,
+    bool? isEditing,
   }) {
     return GraphState(
       vertices: vertices ?? this.vertices,
@@ -76,6 +81,7 @@ class GraphState extends Equatable {
       startVertex: startVertex == null ? this.startVertex : startVertex.value,
       selectedVertexID: selectedVertexID == null ? this.selectedVertexID : selectedVertexID.value,
       selectedEdgeID: selectedEdgeID == null ? this.selectedEdgeID : selectedEdgeID.value,
+      isEditing: isEditing ?? this.isEditing,
     );
   }
 }

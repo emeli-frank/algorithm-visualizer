@@ -133,5 +133,9 @@ class GraphBloc extends Bloc<GraphEvent, GraphState> {
     on<GraphElementReset>((GraphElementReset event, Emitter<GraphState> emit) {
       emit(state.copyWith(vertices: event.vertices, edges: event.edges));
     });
+
+    on<EditModeToggled>((EditModeToggled event, Emitter<GraphState> emit) {
+      emit(state.copyWith(isEditing: event.isEditing));
+    });
   }
 }

@@ -86,3 +86,9 @@ final class GraphElementReset extends GraphEvent {
   final List<Vertex> vertices;
   final List<Edge> edges;
 }
+
+final class EditModeToggled extends GraphEvent {
+  EditModeToggled({required this.isEditing});
+
+  final bool isEditing;
+}

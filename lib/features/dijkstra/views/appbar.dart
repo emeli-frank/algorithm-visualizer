@@ -17,72 +17,97 @@ class AppBar extends StatelessWidget {
       color: Colors.white,
       height: 54.0,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          const GraphTemplateDropdown(template: GraphTemplate.custom),
+          const GraphTemplateDropdown(template: GraphTemplate.custom), // todo:: change this default
           Visibility(
-            visible:
-                context.watch<GraphBloc>().state.selectedVertexID != null ||
-                    context.watch<GraphBloc>().state.selectedEdgeID != null,
-            child: ToolBarButtons(
+            visible: !context.watch<GraphBloc>().state.isEditing,
+            child: TextButton(
               onPressed: () {
-                var selectedVertexID = context.read<GraphBloc>().state.selectedVertexID;
-                if (selectedVertexID != null) {
-                  context.read<GraphBloc>().add(
-                        VertexDeleted(vertexID: selectedVertexID),
-                      );
-                  return;
-                }
-
-                var selectedEdgeID = context.read<GraphBloc>().state.selectedEdgeID;
-                if (selectedEdgeID != null) {
-                  context.read<GraphBloc>().add(
-                    EdgeDeleted(edgeID: selectedEdgeID),
-                  );
-                }
+                context.read<GraphBloc>().add(EditModeToggled(isEditing: true));
               },
-              iconData: Icons.delete_outline,
-              tooltip: 'Delete (Del)',
+              child: const Text('Edit'),
             ),
           ),
-          ToolBarButtons(
-            onPressed: () {},
-            iconData: Icons.undo,
-            tooltip: 'Undo (Ctrl + Z)',
+          Visibility(
+            visible: context.watch<GraphBloc>().state.isEditing,
+            child: TextButton(
+              onPressed: () {
+                context.read<GraphBloc>().add(EditModeToggled(isEditing: false));
+              },
+              child: const Text('Complete edit'),
+            ),
           ),
-          ToolBarButtons(
-            onPressed: () {},
-            iconData: Icons.redo,
-            tooltip: 'Redo (Ctrl + Shift + Z)',
-          ),
-          ToolBarButtons(
-            onPressed: () {
-              cubit.setSelection(DijkstraTools.pan);
-            },
-            iconData: Icons.pan_tool_outlined,
-            isActive: cubit.state.selection == DijkstraTools.pan,
-            tooltip: 'Move',
-          ),
-          ToolBarButtons(
-            onPressed: () {
-              cubit.setSelection(DijkstraTools.vertices);
-            },
-            iconData: Icons.device_hub_outlined,
-            isActive: cubit.state.selection == DijkstraTools.vertices,
-            tooltip: 'Add Vertex',
-          ),
-          ToolBarButtons(
-            onPressed: () {
-              cubit.setSelection(DijkstraTools.edge);
-            },
-            iconData: Icons.linear_scale_outlined,
-            isActive: cubit.state.selection == DijkstraTools.edge,
-            tooltip: 'Add Edge',
-          ),
-          ToolBarButtons(
-            onPressed: () {},
-            iconData: Icons.info_outline,
-            tooltip: 'Algorithm Info',
+          Visibility(
+            visible: context.watch<GraphBloc>().state.isEditing,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Visibility(
+                  visible:
+                  context.watch<GraphBloc>().state.selectedVertexID != null ||
+                      context.watch<GraphBloc>().state.selectedEdgeID != null,
+                  child: ToolBarButtons(
+                    onPressed: () {
+                      var selectedVertexID = context.read<GraphBloc>().state.selectedVertexID;
+                      if (selectedVertexID != null) {
+                        context.read<GraphBloc>().add(
+                          VertexDeleted(vertexID: selectedVertexID),
+                        );
+                        return;
+                      }
+
+                      var selectedEdgeID = context.read<GraphBloc>().state.selectedEdgeID;
+                      if (selectedEdgeID != null) {
+                        context.read<GraphBloc>().add(
+                          EdgeDeleted(edgeID: selectedEdgeID),
+                        );
+                      }
+                    },
+                    iconData: Icons.delete_outline,
+                    tooltip: 'Delete (Del)',
+                  ),
+                ),
+                ToolBarButtons(
+                  onPressed: () {},
+                  iconData: Icons.undo,
+                  tooltip: 'Undo (Ctrl + Z)',
+                ),
+                ToolBarButtons(
+                  onPressed: () {},
+                  iconData: Icons.redo,
+                  tooltip: 'Redo (Ctrl + Shift + Z)',
+                ),
+                ToolBarButtons(
+                  onPressed: () {
+                    cubit.setSelection(DijkstraTools.pan);
+                  },
+                  iconData: Icons.pan_tool_outlined,
+                  isActive: cubit.state.selection == DijkstraTools.pan,
+                  tooltip: 'Move',
+                ),
+                ToolBarButtons(
+                  onPressed: () {
+                    cubit.setSelection(DijkstraTools.vertices);
+                  },
+                  iconData: Icons.device_hub_outlined,
+                  isActive: cubit.state.selection == DijkstraTools.vertices,
+                  tooltip: 'Add Vertex',
+                ),
+                ToolBarButtons(
+                  onPressed: () {
+                    cubit.setSelection(DijkstraTools.edge);
+                  },
+                  iconData: Icons.linear_scale_outlined,
+                  isActive: cubit.state.selection == DijkstraTools.edge,
+                  tooltip: 'Add Edge',
+                ),
+                ToolBarButtons(
+                  onPressed: () {},
+                  iconData: Icons.info_outline,
+                  tooltip: 'Algorithm Info',
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -161,9 +186,11 @@ class _GraphTemplateDropdownState extends State<GraphTemplateDropdown> {
 
         List<Vertex> vertices = [];
         List<Edge> edges = [];
+        bool isEditing = false;
 
         switch (value) {
           case GraphTemplate.custom:
+            isEditing = true;
             break;
           case GraphTemplate.sample1:
           // todo:: move to a separate file
@@ -200,8 +227,8 @@ class _GraphTemplateDropdownState extends State<GraphTemplateDropdown> {
 
         context.read<AnimationBloc>().add(AnimationReset());
         context.read<GraphBloc>().add(GraphElementReset(vertices: vertices, edges: edges));
+        context.read<GraphBloc>().add(EditModeToggled(isEditing: isEditing));
       },
     );
   }
 }
-
