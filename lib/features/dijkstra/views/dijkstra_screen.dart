@@ -239,15 +239,33 @@ class DijkstraCanvas extends StatelessWidget {
     } else if (!context.read<AnimationBloc>().state.distances.values.any((element) => element != double.infinity) && context.read<AnimationBloc>().state.isRunning) {
       instructionWidgetChild = Text('A table showing the distances of each vertex from the start vertex has now been created. In this table, all the distances from the starting vertex (${context.read<AnimationBloc>().state.startVertex?.label}) to every other vertex have been set to infinity as we haven\'t determined them yet.');
     } else if (context.read<AnimationBloc>().state.currentNeighbor != null) {
-      instructionWidgetChild = Text('Vertex ${context.read<AnimationBloc>().state.currentNeighbor?.label} is now being visited. Its total distance from the starting vertex has now been set to ${context.read<AnimationBloc>().state.distances[context.read<AnimationBloc>().state.currentVertex]} + ${context.read<AnimationBloc>().state.currentEdge?.weight} = ${context.read<AnimationBloc>().state.distances[context.read<AnimationBloc>().state.currentNeighbor]}.');
+      final currentVertex = context.read<AnimationBloc>().state.currentVertex;
+      final currentNeighbor = context.read<AnimationBloc>().state.currentNeighbor;
+      final currentEdge = context.read<AnimationBloc>().state.currentEdge;
+      final distances = context.read<AnimationBloc>().state.distances;
+      final tentativeDistance = distances[currentVertex]! + currentEdge!.weight;
+
+      instructionWidgetChild = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Current total distance for the current vertex ${currentVertex?.label} is ${distances[currentVertex]}'),
+          Text('Weight of the current edge is ${currentEdge?.weight}'),
+          Text('Tentative distance ${distances[currentVertex]} + ${currentEdge!.weight} = $tentativeDistance'),
+          if (distances[currentNeighbor]! > tentativeDistance)
+            Text('The total distance of vertex ${currentNeighbor?.label} is greater than the sum of the total distance of vertex ${currentVertex?.label} and the weight of the edge between them. The total distance of vertex ${currentNeighbor?.label} will be updated to $tentativeDistance'),
+          if (distances[currentNeighbor]! <= tentativeDistance)
+            Text('The total distance of vertex ${currentNeighbor?.label} is less than or equal to the sum of the total distance of vertex ${currentVertex?.label} and the weight of the edge between them. The total distance of vertex ${currentNeighbor?.label} will remain ${distances[currentNeighbor]}'),
+        ],
+      );
+      // instructionWidgetChild = Text('Vertex ${context.read<AnimationBloc>().state.currentNeighbor?.label} is now being visited. Its total distance from the starting vertex has now been set to ${context.read<AnimationBloc>().state.distances[context.read<AnimationBloc>().state.currentVertex]} + ${context.read<AnimationBloc>().state.currentEdge?.weight} = ${context.read<AnimationBloc>().state.distances[context.read<AnimationBloc>().state.currentNeighbor]}.');
     } else if (context.read<AnimationBloc>().state.currVertexEdges.isNotEmpty) {
+      final currentVertex = context.read<AnimationBloc>().state.currentVertex;
       final neighbors = context.read<AnimationBloc>().state.neighbors;
       if (neighbors.isEmpty) {
-        instructionWidgetChild = Text('Vertex ${context.read<AnimationBloc>().state.currentVertex?.label} has no neighbors');
+        instructionWidgetChild = Text('Vertex ${currentVertex?.label} has no neighbors');
       } else {
         var neighborLabel = neighbors.length > 1 ? 'neighbors' : 'neighbor';
         String neighborLabels = '';
-        String hasLabel = neighbors.length > 1 ? 'have' : 'has';
 
         for (var i = 0; i < neighbors.length; i++) {
           neighborLabels += neighbors[i].label;
@@ -256,19 +274,22 @@ class DijkstraCanvas extends StatelessWidget {
             neighborLabels += ', ';
           }
 
-          if (neighbors.length > 1 && i == neighbors.length - 1) { // last element
+          if (neighbors.length > 1 && i == neighbors.length - 2) { // last element
             neighborLabels += ' and ';
             continue;
           }
         }
-        instructionWidgetChild = Text('The $neighborLabel $neighborLabels $hasLabel been selected');
+
+        instructionWidgetChild = Text('The $neighborLabel: $neighborLabels of the current vertex, ${currentVertex?.label}, ${neighbors.length > 1 ? 'are' : 'is'} highlighted. These are the vertices directly connected to ${currentVertex?.label} via edges. The algorithm will now calculate the tentative shortest path to each of these neighbors.');
       }
     } else if (context.read<AnimationBloc>().state.currentVertex != null) {
+      String reason;
       if (context.read<AnimationBloc>().state.currentVertex == context.read<AnimationBloc>().state.startVertex) {
-        instructionWidgetChild = Text('Vertex ${context.read<AnimationBloc>().state.currentVertex?.label} is selected because it is the starting vertex and its distance on the table has been set to zero.');
+        reason = 'it is the starting vertex';
       } else {
-        instructionWidgetChild = Text('Vertex ${context.read<AnimationBloc>().state.currentVertex?.label} is selected because it is the node with the total lowest distance.');
+        reason = 'it is the node with the total lowest distance';
       }
+      instructionWidgetChild = Text('Vertex ${context.read<AnimationBloc>().state.currentVertex?.label} is selected because $reason. This vertex is now the current point of consideration. The algorithm will evaluate the shortest path from this vertex to its neighboring vertices.');
     }
 
     return Expanded(
