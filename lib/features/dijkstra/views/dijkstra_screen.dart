@@ -185,8 +185,9 @@ class DijkstraCanvas extends StatelessWidget {
     Function(DragStartDetails)? onPanStartHandler;
     Function(DragUpdateDetails)? onPanUpdateHandler;
     Function(DragEndDetails)? onPanEndHandler;
+    final isRunning = context.read<AnimationBloc>().state.isRunning;
 
-    if (toolSelectionCubit.state.selection == DijkstraTools.vertices) {
+    if (!isRunning && toolSelectionCubit.state.selection == DijkstraTools.vertices) {
       onTapHandler = (details) {
         _addVertex(context, details.localPosition);
       };
@@ -194,7 +195,7 @@ class DijkstraCanvas extends StatelessWidget {
       cursor = SystemMouseCursors.precise;
     }
 
-    if (toolSelectionCubit.state.selection == DijkstraTools.pan) {
+    if (!isRunning && toolSelectionCubit.state.selection == DijkstraTools.pan) {
       onPanStartHandler = (details) {
         _selectOrUnselectVertexOrEdge(context, details.localPosition);
         _startDraggingVertex(context, details.localPosition, context.read<GraphBloc>().state.vertices);
@@ -215,7 +216,7 @@ class DijkstraCanvas extends StatelessWidget {
       }
     }
 
-    if (toolSelectionCubit.state.selection == DijkstraTools.edge) {
+    if (!isRunning && toolSelectionCubit.state.selection == DijkstraTools.edge) {
       cursor = SystemMouseCursors.click;
 
       onPanStartHandler = (details) {
@@ -229,6 +230,26 @@ class DijkstraCanvas extends StatelessWidget {
       onPanEndHandler = (details) {
         _endDrawingEdge(context, details.localPosition, context.read<GraphBloc>().state.vertices);
       };
+    }
+
+    Widget instructionWidgetChild;
+
+    if (context.read<GraphBloc>().state.vertices.length < 2) {
+      instructionWidgetChild = const Text('Add at least two vertices to begin.');
+    } else if (context.read<AnimationBloc>().state.currentNeighbor != null) {
+      instructionWidgetChild = Text('Vertex ${context.read<AnimationBloc>().state.currentNeighbor?.label} is now being visited');
+    } else if (context.read<AnimationBloc>().state.currVertexEdges.isNotEmpty) {
+      final neighbors = context.read<AnimationBloc>().state.neighbors;
+      instructionWidgetChild = Text('Neighbors, ${neighbors.map((elem) => elem.id).toList().join(",")} have been selected');
+    } else if (context.read<AnimationBloc>().state.currentVertex != null) {
+      print('current vertex: ${context.read<AnimationBloc>().state.currentVertex}, start vertex: ${context.read<AnimationBloc>().state.startVertex}');
+      if (context.read<AnimationBloc>().state.currentVertex == context.read<AnimationBloc>().state.startVertex) {
+        instructionWidgetChild = Text('Vertex ${context.read<AnimationBloc>().state.currentVertex?.label} is selected because it is the starting vertex.');
+      } else {
+        instructionWidgetChild = Text('Vertex ${context.read<AnimationBloc>().state.currentVertex?.label} is selected because it is the node with the total lowest distance.');
+      }
+    } else {
+      instructionWidgetChild = const Text('');
     }
 
     return Expanded(
@@ -291,10 +312,12 @@ class DijkstraCanvas extends StatelessWidget {
                     visitedEdges: context.watch<AnimationBloc>().state.visitedEdges,
                   ),
                 ),
+
+                // Form field that allows you to change the weight of the selected edge
                 Visibility(
                   visible: context.watch<GraphBloc>().state.selectedEdgeID != null,
                   child: Positioned(
-                    bottom: 100,
+                    bottom: 140,
                     child: SizedBox(
                       height: 40.0,
                       width: 60.0,
@@ -311,6 +334,22 @@ class DijkstraCanvas extends StatelessWidget {
                     ),
                   ),
                 ),
+
+                // Shows the algorithm information to the user
+                Visibility(
+                  visible: !context.watch<GraphBloc>().state.isEditing,
+                  child: Positioned(
+                    bottom: 60,
+                    right: 0,
+                    left: 0,
+                    child: Container(
+                      color: Colors.white,
+                      child: instructionWidgetChild,
+                    ),
+                  ),
+                ),
+
+                // Displays a table that shows the current state of the algorithm
                 Positioned(
                   right: 0,
                   bottom: 60,
@@ -366,6 +405,8 @@ class DijkstraCanvas extends StatelessWidget {
                     ),
                   ),
                 ),
+
+                // Controls for the animation
                 Positioned(
                   bottom: 0,
                   right: 0,
@@ -373,41 +414,47 @@ class DijkstraCanvas extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(8.0),
                     color: Colors.white,
-                    child: Row(
+                    child: Column(
                       children: [
                         Visibility(
                           visible: !context.watch<AnimationBloc>().state.isRunning,
-                          child: TextButton(
-                            onPressed: () {
-                              context.read<AnimationBloc>().add(AnimationStarted(
-                                startVertex: context.read<GraphBloc>().state.vertices.first, // todo:: should be selected dynamically
-                                vertices: context.read<GraphBloc>().state.vertices,
-                                edges: context.read<GraphBloc>().state.edges,
-                              ));
-                            },
-                            child: const Text('Start'),
-                          ),
+                          child: const Text('Select a start vertex and click the start button below to begin.'),
                         ),
                         Visibility(
-                          visible: context.watch<AnimationBloc>().state.isRunning,
-                          child: TextButton(
-                            onPressed: () {
-                              context.read<AnimationBloc>().add(AnimationEnded());
-                            },
-                            child: const Text('End'),
-                          ),
-                        ),
-                        Visibility(
-                          visible: context.watch<AnimationBloc>().state.isRunning,
+                          visible: !context.watch<GraphBloc>().state.isEditing,
                           child: Row(
                             children: [
-                              IconButton(
-                                onPressed: () {},
-                                icon: const Icon(Icons.skip_previous_outlined),
+                              Visibility(
+                                visible: !context.watch<AnimationBloc>().state.isRunning,
+                                child: TextButton(
+                                  onPressed: context.read<GraphBloc>().state.selectedVertexID == null ? null : () {
+                                    context.read<GraphBloc>().add(VertexSelected(vertexID: null));
+                                    context.read<AnimationBloc>().add(AnimationStarted(
+                                      startVertex: context.read<GraphBloc>().state.vertices
+                                          .firstWhere((v) => v.id == context.read<GraphBloc>().state.selectedVertexID),
+                                      vertices: context.read<GraphBloc>().state.vertices,
+                                      edges: context.read<GraphBloc>().state.edges,
+                                    ));
+                                  },
+                                  child: const Text('Start'),
+                                ),
                               ),
-                              IconButton(
-                                onPressed: () {},
-                                icon: const Icon(Icons.play_arrow_outlined),
+                              Visibility(
+                                visible: context.watch<AnimationBloc>().state.isRunning,
+                                child: TextButton(
+                                  onPressed: () {
+                                    context.read<AnimationBloc>().add(AnimationEnded());
+                                  },
+                                  child: const Text('End'),
+                                ),
+                              ),
+                              const IconButton(
+                                onPressed: null,
+                                icon: Icon(Icons.skip_previous_outlined),
+                              ),
+                              const IconButton(
+                                onPressed: null,
+                                icon: Icon(Icons.play_arrow_outlined),
                               ),
                               IconButton(
                                 onPressed: context.watch<AnimationBloc>().state.isComplete ? null : () {

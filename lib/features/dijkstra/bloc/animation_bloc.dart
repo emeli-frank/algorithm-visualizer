@@ -27,6 +27,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
         neighbors: [],
         currentNeighbor: const Optional<Vertex?>(null),
         visitedEdges: [],
+        startVertex: const Optional<Vertex?>(null),
       ));
     });
 
@@ -50,6 +51,10 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     on<AnimationNextStep>((event, emit) {
       _processNextStep(event, emit, state);
     });
+
+    /*on<StartVertexSelected>((event, emit) {
+      emit(state.copyWith(startVertex: Optional<Vertex>(event.vertex)));
+    });*/
   }
 
   late List<Vertex> vertices;
@@ -79,8 +84,9 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
       unvisitedVertices: unvisitedVertices,
       isRunning: true,
       isComplete: false,
-      step: const Optional<AnimationStep>(AnimationStep.findingCurrentVertex)),
-    );
+      step: const Optional<AnimationStep>(AnimationStep.findingCurrentVertex),
+      startVertex: Optional<Vertex>(currentVertex),
+    ));
   }
 
   void _findCurrentVertex(AnimationState state, Emitter<AnimationState> emit) {

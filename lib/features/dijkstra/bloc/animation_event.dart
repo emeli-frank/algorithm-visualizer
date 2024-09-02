@@ -22,3 +22,9 @@ final class AnimationNextStep extends AnimationEvent {}
 final class AnimationEnded extends AnimationEvent {}
 
 final class AnimationReset extends AnimationEvent {}
+
+/*final class StartVertexSelected extends AnimationEvent {
+  StartVertexSelected({required this.vertex});
+
+  final Vertex vertex;
+}*/
