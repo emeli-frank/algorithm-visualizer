@@ -76,7 +76,6 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
       distances[vertex] = double.infinity;
       previousVertices[vertex] = null;
     }
-    distances[currentVertex] = 0;
 
     emit(state.copyWith(
       previousVertices: previousVertices,
@@ -84,9 +83,20 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
       unvisitedVertices: unvisitedVertices,
       isRunning: true,
       isComplete: false,
-      step: const Optional<AnimationStep>(AnimationStep.findingCurrentVertex),
+      step: const Optional<AnimationStep>(AnimationStep.initStartVertex),
       startVertex: Optional<Vertex>(currentVertex),
     ));
+  }
+
+  void _initializeStartDistance(Emitter<AnimationState> emit, AnimationState state) {
+    var distances = state.distances;
+    distances[currentVertex] = 0;
+
+    emit(state.copyWith(
+      distances: distances,
+    ));
+
+    _findCurrentVertex(state, emit);
   }
 
   void _findCurrentVertex(AnimationState state, Emitter<AnimationState> emit) {
@@ -184,6 +194,9 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     }
 
     switch(step) {
+      case AnimationStep.initStartVertex:
+        _initializeStartDistance(emit, state);
+        break;
       case AnimationStep.findingCurrentVertex:
         _findCurrentVertex(state, emit);
         break;

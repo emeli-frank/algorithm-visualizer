@@ -1,6 +1,7 @@
 part of 'animation_bloc.dart';
 
 enum AnimationStep {
+  initStartVertex,
   findingCurrentVertex,
   findingCurrentEdges,
   findingCurrentEdge,

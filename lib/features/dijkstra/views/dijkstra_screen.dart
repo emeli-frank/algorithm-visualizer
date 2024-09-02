@@ -232,24 +232,43 @@ class DijkstraCanvas extends StatelessWidget {
       };
     }
 
-    Widget instructionWidgetChild;
+    Widget instructionWidgetChild = Container();
 
     if (context.read<GraphBloc>().state.vertices.length < 2) {
       instructionWidgetChild = const Text('Add at least two vertices to begin.');
+    } else if (!context.read<AnimationBloc>().state.distances.values.any((element) => element != double.infinity) && context.read<AnimationBloc>().state.isRunning) {
+      instructionWidgetChild = Text('A table showing the distances of each vertex from the start vertex has now been created. In this table, all the distances from the starting vertex (${context.read<AnimationBloc>().state.startVertex?.label}) to every other vertex have been set to infinity as we haven\'t determined them yet.');
     } else if (context.read<AnimationBloc>().state.currentNeighbor != null) {
-      instructionWidgetChild = Text('Vertex ${context.read<AnimationBloc>().state.currentNeighbor?.label} is now being visited');
+      instructionWidgetChild = Text('Vertex ${context.read<AnimationBloc>().state.currentNeighbor?.label} is now being visited. Its total distance from the starting vertex has now been set to ${context.read<AnimationBloc>().state.distances[context.read<AnimationBloc>().state.currentVertex]} + ${context.read<AnimationBloc>().state.currentEdge?.weight} = ${context.read<AnimationBloc>().state.distances[context.read<AnimationBloc>().state.currentNeighbor]}.');
     } else if (context.read<AnimationBloc>().state.currVertexEdges.isNotEmpty) {
       final neighbors = context.read<AnimationBloc>().state.neighbors;
-      instructionWidgetChild = Text('Neighbors, ${neighbors.map((elem) => elem.id).toList().join(",")} have been selected');
+      if (neighbors.isEmpty) {
+        instructionWidgetChild = Text('Vertex ${context.read<AnimationBloc>().state.currentVertex?.label} has no neighbors');
+      } else {
+        var neighborLabel = neighbors.length > 1 ? 'neighbors' : 'neighbor';
+        String neighborLabels = '';
+        String hasLabel = neighbors.length > 1 ? 'have' : 'has';
+
+        for (var i = 0; i < neighbors.length; i++) {
+          neighborLabels += neighbors[i].label;
+
+          if (i != neighbors.length - 1) { // neither the first nor the last element
+            neighborLabels += ', ';
+          }
+
+          if (neighbors.length > 1 && i == neighbors.length - 1) { // last element
+            neighborLabels += ' and ';
+            continue;
+          }
+        }
+        instructionWidgetChild = Text('The $neighborLabel $neighborLabels $hasLabel been selected');
+      }
     } else if (context.read<AnimationBloc>().state.currentVertex != null) {
-      print('current vertex: ${context.read<AnimationBloc>().state.currentVertex}, start vertex: ${context.read<AnimationBloc>().state.startVertex}');
       if (context.read<AnimationBloc>().state.currentVertex == context.read<AnimationBloc>().state.startVertex) {
-        instructionWidgetChild = Text('Vertex ${context.read<AnimationBloc>().state.currentVertex?.label} is selected because it is the starting vertex.');
+        instructionWidgetChild = Text('Vertex ${context.read<AnimationBloc>().state.currentVertex?.label} is selected because it is the starting vertex and its distance on the table has been set to zero.');
       } else {
         instructionWidgetChild = Text('Vertex ${context.read<AnimationBloc>().state.currentVertex?.label} is selected because it is the node with the total lowest distance.');
       }
-    } else {
-      instructionWidgetChild = const Text('');
     }
 
     return Expanded(
@@ -387,7 +406,7 @@ class DijkstraCanvas extends StatelessWidget {
                             ),
                             const SizedBox(width: 24.0),
                             Text(
-                              distance.toString(),
+                              distance == double.infinity ? '\u221E' : distance.toStringAsFixed(0),
                               style: TextStyle(
                                 color: textColor,
                               ),
