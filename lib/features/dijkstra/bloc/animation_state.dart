@@ -5,6 +5,7 @@ enum AnimationStep {
   findingCurrentVertex,
   findingCurrentEdges,
   findingCurrentEdge,
+  findingCurrentEdge2,
   processingNextStep,
   complete,
 }
@@ -26,6 +27,7 @@ class AnimationState extends Equatable {
     unvisitedVertices,
     this.visitedEdges = const [],
     this.startVertex,
+    this.tentativeDistanceUpdated,
   })  : vertices = vertices ?? [],
         edges = edges ?? [],
         unvisitedVertices = unvisitedVertices ?? Set<Vertex>.from(vertices ?? []);
@@ -45,6 +47,7 @@ class AnimationState extends Equatable {
   final Set<Vertex> unvisitedVertices;
   final List<Edge> visitedEdges;
   final Vertex? startVertex;
+  final bool? tentativeDistanceUpdated;
 
   @override
   List<Object?> get props => [
@@ -63,6 +66,7 @@ class AnimationState extends Equatable {
     unvisitedVertices,
     visitedEdges,
     startVertex,
+    tentativeDistanceUpdated,
   ];
 
   AnimationState copyWith({
@@ -81,6 +85,7 @@ class AnimationState extends Equatable {
     Set<Vertex>? unvisitedVertices,
     List<Edge>? visitedEdges,
     Optional<Vertex?>? startVertex,
+    Optional<bool>? tentativeDistanceUpdated,
   }) {
     return AnimationState(
       vertices: vertices ?? this.vertices,
@@ -98,6 +103,7 @@ class AnimationState extends Equatable {
       unvisitedVertices: unvisitedVertices ?? this.unvisitedVertices,
       visitedEdges: visitedEdges ?? this.visitedEdges,
       startVertex: startVertex == null ? this.startVertex : startVertex.value,
+      tentativeDistanceUpdated: tentativeDistanceUpdated == null ? this.tentativeDistanceUpdated : tentativeDistanceUpdated.value,
     );
   }
 }

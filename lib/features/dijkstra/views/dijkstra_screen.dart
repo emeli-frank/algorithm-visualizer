@@ -238,7 +238,8 @@ class DijkstraCanvas extends StatelessWidget {
       instructionWidgetChild = const Text('Add at least two vertices to begin.');
     } else if (!context.read<AnimationBloc>().state.distances.values.any((element) => element != double.infinity) && context.read<AnimationBloc>().state.isRunning) {
       instructionWidgetChild = Text('A table showing the distances of each vertex from the start vertex has now been created. In this table, all the distances from the starting vertex (${context.read<AnimationBloc>().state.startVertex?.label}) to every other vertex have been set to infinity as we haven\'t determined them yet.');
-    } else if (context.read<AnimationBloc>().state.currentNeighbor != null) {
+    } else if (context.read<AnimationBloc>().state.currentNeighbor != null &&
+        context.read<AnimationBloc>().state.step == AnimationStep.findingCurrentEdge2) {
       final currentVertex = context.read<AnimationBloc>().state.currentVertex;
       final currentNeighbor = context.read<AnimationBloc>().state.currentNeighbor;
       final currentEdge = context.read<AnimationBloc>().state.currentEdge;
@@ -251,13 +252,40 @@ class DijkstraCanvas extends StatelessWidget {
           Text('Current total distance for the current vertex ${currentVertex?.label} is ${distances[currentVertex]}'),
           Text('Weight of the current edge is ${currentEdge?.weight}'),
           Text('Tentative distance ${distances[currentVertex]} + ${currentEdge!.weight} = $tentativeDistance'),
+          Text('Total distance of the neighbor ${currentNeighbor?.label} is ${distances[currentNeighbor]}'),
           if (distances[currentNeighbor]! > tentativeDistance)
             Text('The total distance of vertex ${currentNeighbor?.label} is greater than the sum of the total distance of vertex ${currentVertex?.label} and the weight of the edge between them. The total distance of vertex ${currentNeighbor?.label} will be updated to $tentativeDistance'),
           if (distances[currentNeighbor]! <= tentativeDistance)
-            Text('The total distance of vertex ${currentNeighbor?.label} is less than or equal to the sum of the total distance of vertex ${currentVertex?.label} and the weight of the edge between them. The total distance of vertex ${currentNeighbor?.label} will remain ${distances[currentNeighbor]}'),
+            Text('The total distance of vertex ${currentNeighbor?.label} which is ${distances[currentNeighbor]} is ${distances[currentNeighbor]! < tentativeDistance ? 'less than' : 'equal to'} the sum of the total distance of vertex ${currentVertex?.label} and the weight of the edge between them. The total distance of vertex ${currentNeighbor?.label} will remain ${distances[currentNeighbor]}'),
         ],
       );
-      // instructionWidgetChild = Text('Vertex ${context.read<AnimationBloc>().state.currentNeighbor?.label} is now being visited. Its total distance from the starting vertex has now been set to ${context.read<AnimationBloc>().state.distances[context.read<AnimationBloc>().state.currentVertex]} + ${context.read<AnimationBloc>().state.currentEdge?.weight} = ${context.read<AnimationBloc>().state.distances[context.read<AnimationBloc>().state.currentNeighbor]}.');
+    } else if (context.read<AnimationBloc>().state.currentNeighbor != null &&
+        context.read<AnimationBloc>().state.step == AnimationStep.findingCurrentEdge) {
+      final currentVertex = context.read<AnimationBloc>().state.currentVertex;
+      final currentNeighbor = context.read<AnimationBloc>().state.currentNeighbor;
+      final currentEdge = context.read<AnimationBloc>().state.currentEdge;
+      final distances = context.read<AnimationBloc>().state.distances;
+      final tentativeDistance = distances[currentVertex]! + currentEdge!.weight;
+
+      String text;
+      if (context.read<AnimationBloc>().state.tentativeDistanceUpdated ?? false) {
+        text = 'The tentative distance of vertex ${currentNeighbor?.label} has been updated to $tentativeDistance.';
+      } else {
+        text = 'The tentative distance of vertex ${currentNeighbor?.label} remains unchanged.';
+      }
+
+      var isLastNeighbor = false;
+      var neighbors = context.read<AnimationBloc>().state.neighbors;
+      if (neighbors.isNotEmpty && neighbors.last == currentNeighbor) {
+        isLastNeighbor = true;
+      }
+      if (!isLastNeighbor) {
+        text += 'The algorithm will now move to the next neighbouring vertex.';
+      } else if (context.read<AnimationBloc>().state.unvisitedVertices.isNotEmpty) {
+        text += 'The algorithm will now find the next vertex to visit.';
+      }
+
+      instructionWidgetChild = Text(text);
     } else if (context.read<AnimationBloc>().state.currVertexEdges.isNotEmpty) {
       final currentVertex = context.read<AnimationBloc>().state.currentVertex;
       final neighbors = context.read<AnimationBloc>().state.neighbors;

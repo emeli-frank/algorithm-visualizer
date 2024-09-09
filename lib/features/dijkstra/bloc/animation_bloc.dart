@@ -143,20 +143,30 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
   }
 
   void _findCurrentEdge(AnimationState state, Emitter<AnimationState> emit) {
-    Optional<AnimationStep>? nextStep;
+    // if dealing with the last edge, set next step to AnimationStep.processingNextStep
+    // so that this function is exited in the next iteration
     if (currVertexEdges!.length <= 1) {
-      nextStep = const Optional<AnimationStep>(AnimationStep.processingNextStep);
       if (currVertexEdges!.isEmpty) {
         emit(state.copyWith(
           currentEdge: Optional<Edge>(currentEdge!),
-          step: nextStep,
+          step: const Optional<AnimationStep>(AnimationStep.processingNextStep), // todo:: see if to just call AnimationNextStep.findCurrentVertex instead
         ));
         return;
       }
     }
 
     currentEdge = currVertexEdges!.removeAt(0);
+    final neighbor = currentEdge?.endVertex;
 
+    // Set next step to AnimationStep.findingCurrentEdge2 to proceed to sister function
+    emit(state.copyWith(
+      step: const Optional<AnimationStep>(AnimationStep.findingCurrentEdge2),
+      currentNeighbor: Optional(neighbor),
+      currentEdge: Optional<Edge?>(currentEdge),
+    ));
+  }
+
+  void _findCurrentEdge2(AnimationState state, Emitter<AnimationState> emit) {
     final neighbor = currentEdge!.endVertex;
     if (!state.unvisitedVertices.contains(neighbor)) {
       emit(state.copyWith(currentEdge: const Optional<Edge?>(null)));
@@ -167,18 +177,23 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     final previousVertices = {...state.previousVertices};
     final newDist = distances[currentVertex]! + currentEdge!.weight;
 
-    // If the new distance is shorter
+    var tentativeDistanceUpdated = false;
+
+    // If the new distance is shorter, update the distance and previous vertex of the neighbor
     if (newDist < distances[neighbor]!) {
       distances[neighbor] = newDist;
       previousVertices[neighbor] = currentVertex;
+      tentativeDistanceUpdated = true;
     }
 
+    // Continue iteration on edges
     emit(state.copyWith(
       distances: distances,
       previousVertices: previousVertices,
       currentEdge: Optional<Edge>(currentEdge!),
       currentNeighbor: Optional(neighbor),
-      step: nextStep,
+      step: const Optional<AnimationStep>(AnimationStep.findingCurrentEdge),
+      tentativeDistanceUpdated: Optional(tentativeDistanceUpdated),
     ));
   }
 
@@ -205,6 +220,9 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
         break;
       case AnimationStep.findingCurrentEdge:
         _findCurrentEdge(state, emit);
+        break;
+      case AnimationStep.findingCurrentEdge2:
+        _findCurrentEdge2(state, emit);
         break;
       case AnimationStep.processingNextStep:
         _processNextStep(event, emit, state);
