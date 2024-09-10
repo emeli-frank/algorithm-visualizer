@@ -6,7 +6,6 @@ enum AnimationStep {
   findingCurrentEdges,
   findingCurrentEdge,
   findingCurrentEdge2,
-  processingNextStep,
   complete,
 }
 

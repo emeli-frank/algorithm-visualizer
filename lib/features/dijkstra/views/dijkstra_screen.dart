@@ -281,8 +281,6 @@ class DijkstraCanvas extends StatelessWidget {
       }
       if (!isLastNeighbor) {
         text += 'The algorithm will now move to the next neighbouring vertex.';
-      } else if (context.read<AnimationBloc>().state.unvisitedVertices.isNotEmpty) {
-        text += 'The algorithm will now find the next vertex to visit.';
       }
 
       instructionWidgetChild = Text(text);
@@ -310,6 +308,11 @@ class DijkstraCanvas extends StatelessWidget {
 
         instructionWidgetChild = Text('The $neighborLabel: $neighborLabels of the current vertex, ${currentVertex?.label}, ${neighbors.length > 1 ? 'are' : 'is'} highlighted. These are the vertices directly connected to ${currentVertex?.label} via edges. The algorithm will now calculate the tentative shortest path to each of these neighbors.');
       }
+    } else if (context.read<AnimationBloc>().state.step == AnimationStep.findingCurrentVertex &&
+        context.read<AnimationBloc>().state.currentEdge == null &&
+        // context.read<AnimationBloc>().state.currentVertex == null &&
+        context.read<AnimationBloc>().state.currentNeighbor == null) {
+      instructionWidgetChild = Text('The vertex ${context.read<AnimationBloc>().state.currentVertex?.label} and its neighbours have been evaluated. It has now been grayed out to indicate that it has been visited. The algorithm will now find the next vertex to visit.'); // todo:: describe the criteria for selecting the next vertex
     } else if (context.read<AnimationBloc>().state.currentVertex != null) {
       String reason;
       if (context.read<AnimationBloc>().state.currentVertex == context.read<AnimationBloc>().state.startVertex) {

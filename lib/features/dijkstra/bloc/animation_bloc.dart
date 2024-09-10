@@ -102,7 +102,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
   void _findCurrentVertex(AnimationState state, Emitter<AnimationState> emit) {
     // Find the unvisited vertex with the smallest distance
     final distances = {...state.distances};
-    currentVertex = state.unvisitedVertices.reduce((a, b) { // todo:: see if to get this directly from the state class
+    currentVertex = state.unvisitedVertices.reduce((a, b) {
       return distances[a]! < distances[b]! ? a : b;
     });
 
@@ -148,8 +148,10 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     if (currVertexEdges!.length <= 1) {
       if (currVertexEdges!.isEmpty) {
         emit(state.copyWith(
-          currentEdge: Optional<Edge>(currentEdge!),
-          step: const Optional<AnimationStep>(AnimationStep.processingNextStep), // todo:: see if to just call AnimationNextStep.findCurrentVertex instead
+          currentEdge: const Optional(null),
+          step: const Optional<AnimationStep>(AnimationStep.findingCurrentVertex),
+          currentVertex: const Optional<Vertex?>(null),
+          currentNeighbor: const Optional<Vertex?>(null),
         ));
         return;
       }
@@ -198,17 +200,12 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
   }
 
   void _processNextStep(AnimationNextStep event, Emitter<AnimationState> emit, AnimationState state) {
-    if (state.unvisitedVertices.isEmpty) { // todo:: see if to put the logic at the end
+    if (state.unvisitedVertices.isEmpty) {
       emit(state.copyWith(isComplete: true));
       return;
     }
 
-    AnimationStep step = state.step;
-    if (state.step == AnimationStep.processingNextStep) {
-      step = AnimationStep.findingCurrentVertex;
-    }
-
-    switch(step) {
+    switch(state.step) {
       case AnimationStep.initStartVertex:
         _initializeStartDistance(emit, state);
         break;
@@ -224,16 +221,8 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
       case AnimationStep.findingCurrentEdge2:
         _findCurrentEdge2(state, emit);
         break;
-      case AnimationStep.processingNextStep:
-        _processNextStep(event, emit, state);
-        break;
       case AnimationStep.complete:
         break;
     }
-
-    // If there are no more vertices to visit, the algorithm is complete
-    /*if (unvisitedVertices.isEmpty) {
-      emit(state.copyWith(isComplete: true));
-    }*/
   }
 }
