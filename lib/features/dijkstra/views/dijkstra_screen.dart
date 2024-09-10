@@ -264,7 +264,11 @@ class DijkstraCanvas extends StatelessWidget {
 
     Widget instructionWidgetChild = Container();
 
-    if (context.read<GraphBloc>().state.vertices.length < 2) {
+    if (context.watch<GraphBloc>().state.vertices.length < 2) {
+      instructionWidgetChild = const Text('Add at least two vertices to begin.');
+    } else if (!context.watch<AnimationBloc>().state.isRunning) {
+      instructionWidgetChild = const Text('Select a start vertex and click the start button below to begin.');
+    } else if (context.read<GraphBloc>().state.vertices.length < 2) {
       instructionWidgetChild = const Text('Add at least two vertices to begin.');
     } else if (!context.read<AnimationBloc>().state.distances.values.any((element) => element != double.infinity) && context.read<AnimationBloc>().state.isRunning) {
       instructionWidgetChild = Text('A table showing the distances of each vertex from the start vertex has now been created. In this table, all the distances from the starting vertex (${context.read<AnimationBloc>().state.startVertex?.label}) to every other vertex have been set to infinity as we haven\'t determined them yet.');
@@ -437,20 +441,6 @@ class DijkstraCanvas extends StatelessWidget {
                   ),
                 ),
 
-                // Shows the algorithm information to the user
-                Visibility(
-                  visible: !context.watch<GraphBloc>().state.isEditing,
-                  child: Positioned(
-                    bottom: 60,
-                    right: 0,
-                    left: 0,
-                    child: Container(
-                      color: Colors.white,
-                      child: instructionWidgetChild,
-                    ),
-                  ),
-                ),
-
                 // Displays a table that shows the current state of the algorithm
                 Positioned(
                   right: 0,
@@ -510,18 +500,35 @@ class DijkstraCanvas extends StatelessWidget {
 
                 // Controls for the animation
                 Positioned(
-                  bottom: 0,
-                  right: 0,
-                  left: 0,
+                  bottom: 16,
+                  right: 16,
+                  left: 16,
                   child: Container(
-                    padding: const EdgeInsets.all(8.0),
-                    color: Colors.white,
-                    child: Column(
-                      children: [
-                        Visibility(
-                          visible: !context.watch<AnimationBloc>().state.isRunning,
-                          child: const Text('Select a start vertex and click the start button below to begin.'),
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8.0,
+                          offset: const Offset(0, 2),
                         ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Shows the visualization information to the user
+                        Visibility(
+                          visible: !context.watch<GraphBloc>().state.isEditing,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 12.0, bottom: 20.0, right: 12.0, top: 4.0),
+                            child: instructionWidgetChild,
+                          ),
+                        ),
+
+                        // Animation controls
                         Visibility(
                           visible: !context.watch<GraphBloc>().state.isEditing,
                           child: Row(
@@ -550,9 +557,10 @@ class DijkstraCanvas extends StatelessWidget {
                                   child: const Text('End'),
                                 ),
                               ),
-                              const IconButton(
-                                onPressed: null,
-                                icon: Icon(Icons.skip_previous_outlined),
+                              const SizedBox(
+                                height: 18.0,
+                                width: 20.0,
+                                child: VerticalDivider(width: 1, color: Colors.black12),
                               ),
                               const IconButton(
                                 onPressed: null,
