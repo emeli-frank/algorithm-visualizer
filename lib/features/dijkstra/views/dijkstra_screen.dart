@@ -391,25 +391,27 @@ class DijkstraCanvas extends StatelessWidget {
             cursor: cursor,
             child: Stack(
               children: [
-                CustomPaint(
-                  size: Size.infinite,
-                  painter: GraphPainter(
-                    vertices: context.watch<GraphBloc>().state.vertices,
-                    edges: context.watch<GraphBloc>().state.edges,
-                    vertexRadius: vertexRadius,
-                    edgeThickness: edgeThickness,
-                    temporaryEdgeEnd: context.watch<GraphBloc>().state.temporaryEdgeEnd,
-                    startVertex: context.watch<GraphBloc>().state.startVertex?.offset,
-                    selectedVertexID: context.watch<GraphBloc>().state.selectedVertexID,
-                    selectedEdgeID: context.watch<GraphBloc>().state.selectedEdgeID,
-                    currentVertexID: context.watch<AnimationBloc>().state.currentVertex?.id,
-                    currentEdgeID: context.watch<AnimationBloc>().state.currentEdge?.id,
-                    currVertexEdges: context.watch<AnimationBloc>().state.currVertexEdges,
-                    neighbors: context.watch<AnimationBloc>().state.neighbors,
-                    currentNeighbor: context.watch<AnimationBloc>().state.currentNeighbor,
-                    unvisitedVertices: context.watch<AnimationBloc>().state.unvisitedVertices,
-                    isAnimationRunning: context.watch<AnimationBloc>().state.isRunning,
-                    visitedEdges: context.watch<AnimationBloc>().state.visitedEdges,
+                ClipRect(
+                  child: CustomPaint(
+                    size: Size.infinite,
+                    painter: GraphPainter(
+                      vertices: context.watch<GraphBloc>().state.vertices,
+                      edges: context.watch<GraphBloc>().state.edges,
+                      vertexRadius: vertexRadius,
+                      edgeThickness: edgeThickness,
+                      temporaryEdgeEnd: context.watch<GraphBloc>().state.temporaryEdgeEnd,
+                      startVertex: context.watch<GraphBloc>().state.startVertex?.offset,
+                      selectedVertexID: context.watch<GraphBloc>().state.selectedVertexID,
+                      selectedEdgeID: context.watch<GraphBloc>().state.selectedEdgeID,
+                      currentVertexID: context.watch<AnimationBloc>().state.currentVertex?.id,
+                      currentEdgeID: context.watch<AnimationBloc>().state.currentEdge?.id,
+                      currVertexEdges: context.watch<AnimationBloc>().state.currVertexEdges,
+                      neighbors: context.watch<AnimationBloc>().state.neighbors,
+                      currentNeighbor: context.watch<AnimationBloc>().state.currentNeighbor,
+                      unvisitedVertices: context.watch<AnimationBloc>().state.unvisitedVertices,
+                      isAnimationRunning: context.watch<AnimationBloc>().state.isRunning,
+                      visitedEdges: context.watch<AnimationBloc>().state.visitedEdges,
+                    ),
                   ),
                 ),
 
