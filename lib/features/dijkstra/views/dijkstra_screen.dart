@@ -310,15 +310,14 @@ class DijkstraCanvas extends StatelessWidget {
       }
     } else if (context.read<AnimationBloc>().state.step == AnimationStep.findingCurrentVertex &&
         context.read<AnimationBloc>().state.currentEdge == null &&
-        // context.read<AnimationBloc>().state.currentVertex == null &&
         context.read<AnimationBloc>().state.currentNeighbor == null) {
-      instructionWidgetChild = Text('The vertex ${context.read<AnimationBloc>().state.currentVertex?.label} and its neighbours have been evaluated. It has now been grayed out to indicate that it has been visited. The algorithm will now find the next vertex to visit.'); // todo:: describe the criteria for selecting the next vertex
+      instructionWidgetChild = Text('The vertex ${context.read<AnimationBloc>().state.currentVertex?.label} and its neighbours have been evaluated. It will be grayed out in the next step to indicate that it has been visited. The algorithm will now find the next vertex to visit.'); // todo:: describe the criteria for selecting the next vertex
     } else if (context.read<AnimationBloc>().state.currentVertex != null) {
       String reason;
       if (context.read<AnimationBloc>().state.currentVertex == context.read<AnimationBloc>().state.startVertex) {
         reason = 'it is the starting vertex';
       } else {
-        reason = 'it is the node with the total lowest distance';
+        reason = 'it is the unvisited vertex with the total lowest distance';
       }
       instructionWidgetChild = Text('Vertex ${context.read<AnimationBloc>().state.currentVertex?.label} is selected because $reason. This vertex is now the current point of consideration. The algorithm will evaluate the shortest path from this vertex to its neighboring vertices.');
     }
@@ -630,14 +629,19 @@ class GraphPainter extends CustomPainter {
       var isVisited = !unvisitedVertices.contains(vertex) && currentVertexID != vertex.id && isAnimationRunning;
 
       if (currentVertexID != null && vertex.id == currentVertexID) {
+        // If drawing the current visited vertex
         _drawVertex(canvas: canvas, vertex: vertex, hasThickBorder: true, color: Colors.green, isVisited: isVisited);
       } else if (selectedVertexID != null && vertex.id == selectedVertexID) {
+        // If drawing the user-selected vertex
         _drawVertex(canvas: canvas, vertex: vertex, hasThickBorder: true, color: vertexFocusedFillColor, isVisited: isVisited);
       } else if (currentNeighbor != null && currentNeighbor!.id == vertex.id) {
+        // If drawing the current neighbor being processed
         _drawVertex(canvas: canvas, vertex: vertex, hasThickBorder: true, color: Colors.yellow, isVisited: isVisited);
       } else if (neighbors.contains(vertex)) {
+        // If drawing a neighbors of the current vertex
         _drawVertex(canvas: canvas, vertex: vertex, hasThickBorder: false, color: Colors.yellow, isVisited: isVisited);
       } else {
+        // If drawing a regular vertex
         _drawVertex(canvas: canvas, vertex: vertex, hasThickBorder: false, isVisited: isVisited);
       }
 

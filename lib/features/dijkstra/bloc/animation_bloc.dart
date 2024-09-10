@@ -143,14 +143,13 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
   }
 
   void _findCurrentEdge(AnimationState state, Emitter<AnimationState> emit) {
-    // if dealing with the last edge, set next step to AnimationStep.processingNextStep
+    // If dealing with the last edge, set next step to AnimationStep.processingNextStep
     // so that this function is exited in the next iteration
     if (currVertexEdges!.length <= 1) {
       if (currVertexEdges!.isEmpty) {
         emit(state.copyWith(
           currentEdge: const Optional(null),
           step: const Optional<AnimationStep>(AnimationStep.findingCurrentVertex),
-          currentVertex: const Optional<Vertex?>(null),
           currentNeighbor: const Optional<Vertex?>(null),
         ));
         return;
@@ -192,7 +191,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     emit(state.copyWith(
       distances: distances,
       previousVertices: previousVertices,
-      currentEdge: Optional<Edge>(currentEdge!),
+      currentEdge: Optional<Edge?>(currentEdge),
       currentNeighbor: Optional(neighbor),
       step: const Optional<AnimationStep>(AnimationStep.findingCurrentEdge),
       tentativeDistanceUpdated: Optional(tentativeDistanceUpdated),
