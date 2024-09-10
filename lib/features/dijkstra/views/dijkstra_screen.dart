@@ -697,9 +697,13 @@ class GraphPainter extends CustomPainter {
       ..color = Colors.black
       ..strokeWidth = edgeThickness + 1.5;
 
+    const double arrowSize = 10.0;
+    // Arrowhead angle in radians
+    const double arrowAngle = 25 * (3.1416 / 180);
+
     // Iterate through all edges and determine the appropriate paint for each
     for (var edge in edges) {
-      var visited = visitedEdges.contains(edge) && currentEdgeID != edge.id; // todo:: compare ids instead?
+      var visited = visitedEdges.contains(edge) && currentEdgeID != edge.id;
       Paint paint;
 
       // Determine paint based on edge's state
@@ -715,8 +719,32 @@ class GraphPainter extends CustomPainter {
           ..strokeWidth = edgeThickness;
       }
 
-      // Draw the edge
+      // Draw the edge line
       canvas.drawLine(edge.startVertex.offset, edge.endVertex.offset, paint);
+
+      // Calculate the direction of the edge to draw the arrow
+      final dx = edge.endVertex.offset.dx - edge.startVertex.offset.dx;
+      final dy = edge.endVertex.offset.dy - edge.startVertex.offset.dy;
+      final angle = atan2(dy, dx);
+
+      // Calculate the arrow position, moving it away from the end vertex
+      final arrowEndX = edge.endVertex.offset.dx - vertexRadius * cos(angle);
+      final arrowEndY = edge.endVertex.offset.dy - vertexRadius * sin(angle);
+
+      // Calculate points for the arrowhead
+      final arrowX1 = arrowEndX - arrowSize * cos(angle - arrowAngle);
+      final arrowY1 = arrowEndY - arrowSize * sin(angle - arrowAngle);
+      final arrowX2 = arrowEndX - arrowSize * cos(angle + arrowAngle);
+      final arrowY2 = arrowEndY - arrowSize * sin(angle + arrowAngle);
+
+      final path = Path()
+        ..moveTo(arrowEndX, arrowEndY)  // Arrow tip
+        ..lineTo(arrowX1, arrowY1)      // Left side of arrowhead
+        ..lineTo(arrowX2, arrowY2)      // Right side of arrowhead
+        ..close();
+
+      // Draw the arrowhead
+      canvas.drawPath(path, paint);
 
       // Draw the weight label at the midpoint of the edge
       final midPoint = Offset(
