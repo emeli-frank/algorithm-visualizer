@@ -14,139 +14,170 @@ class AppBar extends StatelessWidget {
     var cubit = context.watch<ToolSelectionCubit>();
 
     return Container(
-      color: Colors.white,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4.0,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       height: 48.0,
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Visibility(
-            visible: !context.watch<SidebarCubit>().state.isOpen,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: NavIconButton(
-                iconData: Icons.menu_open_outlined,
-                onPressed: () {
-                  context.read<SidebarCubit>().toggle(isOpen: true);
-                },
-                tooltip: 'Open sidebar',
-              ),
-            ),
-          ),
-          const SizedBox(width: 8.0),
-          const GraphTemplateDropdown(template: GraphTemplate.custom), // todo:: change this default
-          Visibility(
-            visible: !context.watch<GraphBloc>().state.isEditing,
-            child: TextButton(
-              onPressed: () {
-                context.read<GraphBloc>().add(EditModeToggled(isEditing: true));
-              },
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.edit_outlined, size: 16.0,),
-                  SizedBox(width: 8),
-                  Text('Edit graph'),
-                ],
-              ),
-            ),
-          ),
-          Visibility(
-            visible: context.watch<GraphBloc>().state.isEditing,
-            child: TextButton(
-              onPressed: () {
-                context.read<GraphBloc>().add(EditModeToggled(isEditing: false));
-              },
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.check, size: 16.0,),
-                  SizedBox(width: 8),
-                  Text('Complete edit'),
-                ],
-              ),
-            ),
-          ),
-          Visibility(
-            visible: context.watch<GraphBloc>().state.isEditing,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Visibility(
-                  visible:
-                  context.watch<GraphBloc>().state.selectedVertexID != null ||
-                      context.watch<GraphBloc>().state.selectedEdgeID != null,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Visibility(
+                visible: !context.watch<SidebarCubit>().state.isOpen,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
                   child: NavIconButton(
+                    iconData: Icons.menu_open_outlined,
                     onPressed: () {
-                      var selectedVertexID = context.read<GraphBloc>().state.selectedVertexID;
-                      if (selectedVertexID != null) {
-                        context.read<GraphBloc>().add(
-                          VertexDeleted(vertexID: selectedVertexID),
-                        );
-                        return;
-                      }
+                      context.read<SidebarCubit>().toggle(isOpen: true);
+                    },
+                    tooltip: 'Open sidebar',
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8.0),
+              const GraphTemplateDropdown(template: GraphTemplate.custom), // todo:: change this default
+              Visibility(
+                visible: !context.watch<GraphBloc>().state.isEditing,
+                child: TextButton(
+                  onPressed: () {
+                    context.read<GraphBloc>().add(EditModeToggled(isEditing: true));
+                  },
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.edit_outlined, size: 16.0,),
+                      SizedBox(width: 8),
+                      Text('Edit graph'),
+                    ],
+                  ),
+                ),
+              ),
+              Visibility(
+                visible: context.watch<GraphBloc>().state.isEditing,
+                child: TextButton(
+                  onPressed: () {
+                    context.read<GraphBloc>().add(EditModeToggled(isEditing: false));
+                  },
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.check, size: 16.0,),
+                      SizedBox(width: 8),
+                      Text('Complete edit'),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Visibility(
+                visible: context.watch<GraphBloc>().state.isEditing,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Visibility(
+                      visible:
+                      context.watch<GraphBloc>().state.selectedVertexID != null ||
+                          context.watch<GraphBloc>().state.selectedEdgeID != null,
+                      child: NavIconButton(
+                        onPressed: () {
+                          var selectedVertexID = context.read<GraphBloc>().state.selectedVertexID;
+                          if (selectedVertexID != null) {
+                            context.read<GraphBloc>().add(
+                              VertexDeleted(vertexID: selectedVertexID),
+                            );
+                            return;
+                          }
 
-                      var selectedEdgeID = context.read<GraphBloc>().state.selectedEdgeID;
-                      if (selectedEdgeID != null) {
-                        context.read<GraphBloc>().add(
-                          EdgeDeleted(edgeID: selectedEdgeID),
-                        );
-                      }
-                    },
-                    iconData: Icons.delete_outline,
-                    tooltip: 'Delete (Del)',
-                  ),
+                          var selectedEdgeID = context.read<GraphBloc>().state.selectedEdgeID;
+                          if (selectedEdgeID != null) {
+                            context.read<GraphBloc>().add(
+                              EdgeDeleted(edgeID: selectedEdgeID),
+                            );
+                          }
+                        },
+                        iconData: Icons.delete_outline,
+                        tooltip: 'Delete (Del)',
+                      ),
+                    ),
+                    NavIconButton(
+                      onPressed: () {},
+                      iconData: Icons.undo,
+                      tooltip: 'Undo (Ctrl + Z)',
+                    ),
+                    NavIconButton(
+                      onPressed: () {},
+                      iconData: Icons.redo,
+                      tooltip: 'Redo (Ctrl + Shift + Z)',
+                    ),
+                    // Add vertical demarcation
+                    const SizedBox(
+                      height: 18.0,
+                      width: 20.0,
+                      child: VerticalDivider(width: 1, color: Colors.black12),
+                    ),
+                    NavIconButton(
+                      onPressed: () {
+                        cubit.setSelection(DijkstraTools.pan);
+                      },
+                      iconData: Icons.pan_tool_outlined,
+                      isActive: cubit.state.selection == DijkstraTools.pan,
+                      tooltip: 'Move',
+                    ),
+                    NavIconButton(
+                      onPressed: () {
+                        cubit.setSelection(DijkstraTools.vertices);
+                      },
+                      iconData: Icons.spoke_outlined,
+                      isActive: cubit.state.selection == DijkstraTools.vertices,
+                      tooltip: 'Add Vertex',
+                    ),
+                    NavIconButton(
+                      onPressed: () {
+                        cubit.setSelection(DijkstraTools.edge);
+                      },
+                      iconData: Icons.linear_scale_outlined,
+                      isActive: cubit.state.selection == DijkstraTools.edge,
+                      tooltip: 'Add Edge',
+                    ),
+                    Visibility(
+                      visible: context.watch<GraphBloc>().state.vertices.isNotEmpty,
+                      child: NavIconButton(
+                        onPressed: () {
+                          context.read<GraphBloc>().add(GraphElementReset(vertices: const [], edges: const []));
+                        },
+                        iconData: Icons.clear,
+                        tooltip: 'Clear graph',
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 18.0,
+                      width: 20.0,
+                      child: VerticalDivider(width: 1, color: Colors.black12),
+                    ),
+                  ],
                 ),
-                NavIconButton(
-                  onPressed: () {},
-                  iconData: Icons.undo,
-                  tooltip: 'Undo (Ctrl + Z)',
-                ),
-                NavIconButton(
-                  onPressed: () {},
-                  iconData: Icons.redo,
-                  tooltip: 'Redo (Ctrl + Shift + Z)',
-                ),
-                NavIconButton(
-                  onPressed: () {
-                    cubit.setSelection(DijkstraTools.pan);
-                  },
-                  iconData: Icons.pan_tool_outlined,
-                  isActive: cubit.state.selection == DijkstraTools.pan,
-                  tooltip: 'Move',
-                ),
-                NavIconButton(
-                  onPressed: () {
-                    cubit.setSelection(DijkstraTools.vertices);
-                  },
-                  iconData: Icons.device_hub_outlined,
-                  isActive: cubit.state.selection == DijkstraTools.vertices,
-                  tooltip: 'Add Vertex',
-                ),
-                NavIconButton(
-                  onPressed: () {
-                    cubit.setSelection(DijkstraTools.edge);
-                  },
-                  iconData: Icons.linear_scale_outlined,
-                  isActive: cubit.state.selection == DijkstraTools.edge,
-                  tooltip: 'Add Edge',
-                ),
-                Visibility(
-                  visible: context.watch<GraphBloc>().state.vertices.isNotEmpty,
-                  child: NavIconButton(
-                    onPressed: () {
-                      context.read<GraphBloc>().add(GraphElementReset(vertices: const [], edges: const []));
-                    },
-                    iconData: Icons.clear,
-                    tooltip: 'Clear graph',
-                  ),
-                ),
-                NavIconButton(
-                  onPressed: () {},
-                  iconData: Icons.info_outline,
-                  tooltip: 'Algorithm Info',
-                ),
-              ],
-            ),
+              ),
+              NavIconButton(
+                onPressed: () {},
+                iconData: Icons.info_outline,
+                tooltip: 'Algorithm Info',
+              ),
+            ],
           ),
         ],
       ),

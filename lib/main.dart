@@ -83,6 +83,7 @@ class MyApp extends StatelessWidget {
           brightness: Brightness.light,
           primary: const Color(0xFF2D4154),
           secondary: Colors.deepOrange,
+          secondaryContainer: Colors.deepOrange.shade50,
           surface: const Color(0xFFF8F5F2),
         ),
         useMaterial3: true,
