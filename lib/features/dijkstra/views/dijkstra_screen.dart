@@ -149,15 +149,43 @@ class DijkstraCanvas extends StatelessWidget {
     context.read<GraphBloc>().add(UpdateTemporaryEdge(temporaryEdgeEnd: offset));
   }
 
-  // Save edge if tracing ends on a vertex
-  void _endDrawingEdge(BuildContext context, Offset offset, List<Vertex> vertices) {
+  // Save edge if tracing ends on a valid vertex
+  void _endDrawingEdge(BuildContext context, Offset offset, List<Vertex> vertices, List<Edge> edges) {
     final startVertex = context.read<GraphBloc>().state.startVertex;
     if (startVertex != null) {
+      // Prevent creating duplicate edges and edges connecting same vertex
       var vertex = _offsetWithinRadiusOfVertices(vertices, offset);
-      if (vertex != null) {
-        var edge = Edge(id: Edge.generateID(), startVertex: startVertex, endVertex: vertex);
-        context.read<GraphBloc>().add(EdgeAdded(edge: edge));
+
+      // Exit if no vertex is selected
+      if (vertex == null) {
+        context.read<GraphBloc>().add(CompleteEdgeDrawing());
+        return;
       }
+
+      // Prevent creating an edge that connects a vertex to itself
+      if (vertex == startVertex) {
+        context.read<GraphBloc>().add(CompleteEdgeDrawing());
+        return;
+      }
+
+      // Prevent creating duplicate edges
+      List<Vertex> verticesToExclude = [];
+
+      for (var v in vertices) {
+        for (var edge in edges) {
+          if ((edge.startVertex.id == startVertex.id && edge.endVertex.id == v.id) || (edge.startVertex.id == v.id && edge.endVertex.id == startVertex.id)) {
+            verticesToExclude.add(v);
+          }
+        }
+      }
+
+      if (verticesToExclude.contains(vertex)) {
+        context.read<GraphBloc>().add(CompleteEdgeDrawing());
+        return;
+      }
+
+      var edge = Edge(id: Edge.generateID(), startVertex: startVertex, endVertex: vertex);
+      context.read<GraphBloc>().add(EdgeAdded(edge: edge));
     }
 
     context.read<GraphBloc>().add(CompleteEdgeDrawing());
@@ -228,7 +256,7 @@ class DijkstraCanvas extends StatelessWidget {
       };
 
       onPanEndHandler = (details) {
-        _endDrawingEdge(context, details.localPosition, context.read<GraphBloc>().state.vertices);
+        _endDrawingEdge(context, details.localPosition, context.read<GraphBloc>().state.vertices, context.read<GraphBloc>().state.edges);
       };
     }
 
