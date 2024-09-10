@@ -3,6 +3,7 @@ import 'package:algorithm_visualizer/features/dijkstra/bloc/animation_bloc.dart'
 import 'package:algorithm_visualizer/features/dijkstra/bloc/graph_bloc.dart';
 import 'package:algorithm_visualizer/features/dijkstra/cubit/tool_selection_cubit.dart';
 import 'package:algorithm_visualizer/features/dijkstra/views/dijkstra_screen.dart';
+import 'package:algorithm_visualizer/features/sidebar/cubit/sidebar_cubit.dart';
 import 'package:algorithm_visualizer/features/sidebar/views/sidebar.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -25,7 +26,14 @@ class MyApp extends StatelessWidget {
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) =>
-            ShellScaffold(child: child),
+            MultiBlocProvider(
+              providers: [
+                BlocProvider<SidebarCubit>(
+                  create: (_) => SidebarCubit(const SidebarState(isOpen: true)),
+                ),
+              ],
+              child: ShellScaffold(child: child),
+            ),
         routes: [
           GoRoute(
             path: '/home',
@@ -70,7 +78,13 @@ class MyApp extends StatelessWidget {
       routeInformationParser: _router.routeInformationParser,
       routeInformationProvider: _router.routeInformationProvider,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF2D4154),
+          brightness: Brightness.light,
+          primary: const Color(0xFF2D4154),
+          secondary: Colors.deepOrange,
+          surface: const Color(0xFFF8F5F2),
+        ),
         useMaterial3: true,
       ),
     );
@@ -101,9 +115,13 @@ class ShellScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: Row(
         children: [
-          const Sidebar(),
+          Visibility(
+            visible: context.watch<SidebarCubit>().state.isOpen,
+            child: const Sidebar(),
+          ),
           Expanded(
             child: child,
           ),

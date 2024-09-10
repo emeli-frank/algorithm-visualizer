@@ -15,9 +15,24 @@ class AppBar extends StatelessWidget {
 
     return Container(
       color: Colors.white,
-      height: 54.0,
+      height: 48.0,
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Row(
         children: [
+          Visibility(
+            visible: !context.watch<SidebarCubit>().state.isOpen,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: NavIconButton(
+                iconData: Icons.menu_open_outlined,
+                onPressed: () {
+                  context.read<SidebarCubit>().toggle(isOpen: true);
+                },
+                tooltip: 'Open sidebar',
+              ),
+            ),
+          ),
+          const SizedBox(width: 8.0),
           const GraphTemplateDropdown(template: GraphTemplate.custom), // todo:: change this default
           Visibility(
             visible: !context.watch<GraphBloc>().state.isEditing,
@@ -25,7 +40,14 @@ class AppBar extends StatelessWidget {
               onPressed: () {
                 context.read<GraphBloc>().add(EditModeToggled(isEditing: true));
               },
-              child: const Text('Edit'),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.edit_outlined, size: 16.0,),
+                  SizedBox(width: 8),
+                  Text('Edit graph'),
+                ],
+              ),
             ),
           ),
           Visibility(
@@ -34,7 +56,14 @@ class AppBar extends StatelessWidget {
               onPressed: () {
                 context.read<GraphBloc>().add(EditModeToggled(isEditing: false));
               },
-              child: const Text('Complete edit'),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.check, size: 16.0,),
+                  SizedBox(width: 8),
+                  Text('Complete edit'),
+                ],
+              ),
             ),
           ),
           Visibility(
@@ -46,7 +75,7 @@ class AppBar extends StatelessWidget {
                   visible:
                   context.watch<GraphBloc>().state.selectedVertexID != null ||
                       context.watch<GraphBloc>().state.selectedEdgeID != null,
-                  child: ToolBarButtons(
+                  child: NavIconButton(
                     onPressed: () {
                       var selectedVertexID = context.read<GraphBloc>().state.selectedVertexID;
                       if (selectedVertexID != null) {
@@ -67,17 +96,17 @@ class AppBar extends StatelessWidget {
                     tooltip: 'Delete (Del)',
                   ),
                 ),
-                ToolBarButtons(
+                NavIconButton(
                   onPressed: () {},
                   iconData: Icons.undo,
                   tooltip: 'Undo (Ctrl + Z)',
                 ),
-                ToolBarButtons(
+                NavIconButton(
                   onPressed: () {},
                   iconData: Icons.redo,
                   tooltip: 'Redo (Ctrl + Shift + Z)',
                 ),
-                ToolBarButtons(
+                NavIconButton(
                   onPressed: () {
                     cubit.setSelection(DijkstraTools.pan);
                   },
@@ -85,7 +114,7 @@ class AppBar extends StatelessWidget {
                   isActive: cubit.state.selection == DijkstraTools.pan,
                   tooltip: 'Move',
                 ),
-                ToolBarButtons(
+                NavIconButton(
                   onPressed: () {
                     cubit.setSelection(DijkstraTools.vertices);
                   },
@@ -93,7 +122,7 @@ class AppBar extends StatelessWidget {
                   isActive: cubit.state.selection == DijkstraTools.vertices,
                   tooltip: 'Add Vertex',
                 ),
-                ToolBarButtons(
+                NavIconButton(
                   onPressed: () {
                     cubit.setSelection(DijkstraTools.edge);
                   },
@@ -101,7 +130,17 @@ class AppBar extends StatelessWidget {
                   isActive: cubit.state.selection == DijkstraTools.edge,
                   tooltip: 'Add Edge',
                 ),
-                ToolBarButtons(
+                Visibility(
+                  visible: context.watch<GraphBloc>().state.vertices.isNotEmpty,
+                  child: NavIconButton(
+                    onPressed: () {
+                      context.read<GraphBloc>().add(GraphElementReset(vertices: const [], edges: const []));
+                    },
+                    iconData: Icons.clear,
+                    tooltip: 'Clear graph',
+                  ),
+                ),
+                NavIconButton(
                   onPressed: () {},
                   iconData: Icons.info_outline,
                   tooltip: 'Algorithm Info',
@@ -110,29 +149,6 @@ class AppBar extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class ToolBarButtons extends StatelessWidget {
-  const ToolBarButtons({super.key, required this.iconData, this.onPressed, this.isActive, required this.tooltip});
-
-  final IconData iconData;
-  final Function()? onPressed;
-  final bool? isActive;
-  final String tooltip;
-
-  @override
-  Widget build(BuildContext context) {
-    var color = (isActive != null && isActive == true) ? Colors.deepOrange : Colors.black54; // todo:: get from theme data
-
-    return IconButton(
-      onPressed: onPressed,
-      tooltip: tooltip,
-      icon: Icon(
-        iconData,
-        color: color,
       ),
     );
   }
@@ -159,6 +175,11 @@ class _GraphTemplateDropdownState extends State<GraphTemplateDropdown> {
   @override
   Widget build(BuildContext context) {
     return DropdownButton<GraphTemplate>(
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.primary,
+        fontSize: 14.0,
+      ),
+      underline: const SizedBox.shrink(),
       value: _template,
       items: [
         DropdownMenuItem(

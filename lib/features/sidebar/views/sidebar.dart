@@ -1,50 +1,49 @@
+import 'package:algorithm_visualizer/features/sidebar/cubit/sidebar_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../widgets/nav_icon_button.dart';
 
 class Sidebar extends StatelessWidget {
   const Sidebar({super.key});
 
   @override
   Widget build(BuildContext context) {
-    var defaultOutlineBorder = OutlineInputBorder(
-      borderSide: const BorderSide(color: Colors.transparent),
-      borderRadius: BorderRadius.circular(16.0),
-    );
-
     return SizedBox(
-      width: 250.0,
+      width: 220.0,
       child: Container(
         padding: const EdgeInsets.all(8.0),
-        color: Colors.black12,
+        color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: IconButton(
-                onPressed: () {},
-                tooltip: 'Close sidebar',
-                icon: const Icon(Icons.menu_open_outlined),
-              ),
+            NavIconButton(
+              iconData: Icons.close,
+              onPressed: () {
+                context.read<SidebarCubit>().toggle(isOpen: false);
+              },
+              tooltip: 'Close sidebar',
             ),
-            SizedBox(
-              height: 40.0,
-              child: TextField(
-                decoration: InputDecoration(
-                  enabledBorder: defaultOutlineBorder,
-                  focusedBorder: defaultOutlineBorder,
-                  border: defaultOutlineBorder,
-                  hintText: 'Filter algorithms',
-                  hintStyle: const TextStyle(
-                    color: Colors.black38,
+            const Padding(
+              padding: EdgeInsets.all(12.0),
+              child: SizedBox(
+                height: 38.0,
+                child: TextField(
+                  style: TextStyle(
+                    fontSize: 14.0,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 10),
-                  fillColor: Colors.black12,
-                  filled: true,
+                  decoration: InputDecoration(
+                    hintText: 'Filter algorithms',
+                    contentPadding: EdgeInsets.symmetric(vertical: 16),
+                    hintStyle: TextStyle(
+                      fontSize: 14.0,
+                    ),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 24.0),
+            const SizedBox(height: 12.0),
             Expanded(
               child: ListView(
                 children: [
@@ -60,8 +59,6 @@ class Sidebar extends StatelessWidget {
                       context.go('/a-star-visualizer');
                     },
                   ),
-                  SidebarList(name: 'Bellman-Ford Algorithm', onTap: () {},),
-                  SidebarList(name: 'Floyd-Warshall Algorithm', onTap: () {},),
                 ],
               ),
             ),
@@ -82,7 +79,16 @@ class SidebarList extends StatelessWidget {
   Widget build(BuildContext context) {
     // return Padding(padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0), child: Text(name),);
     return InkWell(
-      onTap: onTap, child: Padding(padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0), child: Text(name),),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+        child: Text(
+          name,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+      ),
     );
   }
 }
