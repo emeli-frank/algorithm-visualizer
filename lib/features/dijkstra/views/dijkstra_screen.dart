@@ -356,13 +356,18 @@ class DijkstraCanvas extends StatelessWidget {
                 ),
 
                 // Displays a table that shows the current state of the algorithm
-                Positioned(
-                  right: 8.0,
-                  bottom: 60.0,
-                  child: SizedBox(
-                    width: 168.0,
-                    height: 400.0,
-                    child: VisualizationStateTable(),
+                Visibility(
+                  visible: context.watch<AnimationBloc>().state.isRunning,
+                  child: const Positioned(
+                    right: 8.0,
+                    top: 30.0,
+                    child: SizedBox(
+                      width: 250.0,
+                      height: 600.0,
+                      child: SingleChildScrollView(
+                        child: VisualizationStateTable(),
+                      ),
+                    ),
                   ),
                 ),
 
