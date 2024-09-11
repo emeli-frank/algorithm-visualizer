@@ -271,7 +271,33 @@ class DijkstraCanvas extends StatelessWidget {
     } else if (context.read<GraphBloc>().state.vertices.length < 2) {
       instructionWidgetChild = const Text('Add at least two vertices to begin.');
     } else if (!context.read<AnimationBloc>().state.distances.values.any((element) => element != double.infinity) && context.read<AnimationBloc>().state.isRunning) {
-      instructionWidgetChild = Text('A table showing the distances of each vertex from the start vertex has now been created. In this table, all the distances from the starting vertex (${context.read<AnimationBloc>().state.startVertex?.label}) to every other vertex have been set to infinity as we haven\'t determined them yet.');
+      instructionWidgetChild = RichText(
+        text: TextSpan(
+          style: const TextStyle(
+            height: 1.5,
+            color: Colors.black,
+          ),
+          children: [
+            const TextSpan(
+              text: 'A table showing the distances from the start vertex to each vertex has been created. Currently, the distances from the starting vertex ',
+            ),
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: VertexTextLabel(label: '${context.read<AnimationBloc>().state.startVertex?.label}'),
+            ),
+            const TextSpan(
+              text: ' to all other vertices are set to infinity, as they have not yet been determined. Since ',
+            ),
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: VertexTextLabel(label: '${context.read<AnimationBloc>().state.startVertex?.label}'),
+            ),
+            const TextSpan(
+              text: ' is the starting vertex, its distance is set to 0. On the table, the "Shortest distance" column displays the current distance from the starting vertex to each vertex, and the "Previous vertex" column indicates the vertex that precedes each one in the shortest path.',
+            ),
+          ],
+        ),
+      );
     } else if (context.read<AnimationBloc>().state.currentNeighbor != null &&
         context.read<AnimationBloc>().state.step == AnimationStep.findingCurrentEdge2) {
       final currentVertex = context.read<AnimationBloc>().state.currentVertex;
@@ -280,17 +306,105 @@ class DijkstraCanvas extends StatelessWidget {
       final distances = context.read<AnimationBloc>().state.distances;
       final tentativeDistance = distances[currentVertex]! + currentEdge!.weight;
 
+      List<InlineSpan> changeInfo;
+
+      if (distances[currentNeighbor]! > tentativeDistance) {
+        changeInfo = [
+          const TextSpan(
+            text: ' Since this tentative distance is less than the current distance of vertex ',
+          ),
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: VertexTextLabel(label: currentNeighbor!.label, color: Colors.green.shade300,),
+          ),
+          const TextSpan(
+            text: ', the distance of vertex ',
+          ),
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: VertexTextLabel(label: currentNeighbor.label, color: Colors.green.shade300,),
+          ),
+          const TextSpan(
+            text: ' will be updated to ',
+          ),
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: Text('${tentativeDistance.toStringAsFixed(0)}.'),
+          ),
+        ];
+      } else {
+        changeInfo = [
+          const TextSpan(
+            text: ' Since this tentative distance is not less than the current distance of vertex ',
+          ),
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: VertexTextLabel(label: currentNeighbor!.label, color: Colors.green.shade300,),
+          ),
+          const TextSpan(
+            text: ', the distance of vertex ',
+          ),
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: VertexTextLabel(label: currentNeighbor.label, color: Colors.green.shade300,),
+          ),
+          const TextSpan(
+            text: ' will remain unchanged.',
+          ),
+        ];
+      }
+
       instructionWidgetChild = Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Current total distance for the current vertex ${currentVertex?.label} is ${distances[currentVertex]}'),
-          Text('Weight of the current edge is ${currentEdge?.weight}'),
-          Text('Tentative distance ${distances[currentVertex]} + ${currentEdge!.weight} = $tentativeDistance'),
-          Text('Total distance of the neighbor ${currentNeighbor?.label} is ${distances[currentNeighbor]}'),
-          if (distances[currentNeighbor]! > tentativeDistance)
-            Text('The total distance of vertex ${currentNeighbor?.label} is greater than the sum of the total distance of vertex ${currentVertex?.label} and the weight of the edge between them. The total distance of vertex ${currentNeighbor?.label} will be updated to $tentativeDistance'),
-          if (distances[currentNeighbor]! <= tentativeDistance)
-            Text('The total distance of vertex ${currentNeighbor?.label} which is ${distances[currentNeighbor]} is ${distances[currentNeighbor]! < tentativeDistance ? 'less than' : 'equal to'} the sum of the total distance of vertex ${currentVertex?.label} and the weight of the edge between them. The total distance of vertex ${currentNeighbor?.label} will remain ${distances[currentNeighbor]}'),
+          RichText(
+            text: TextSpan(
+              style: const TextStyle(
+                height: 1.5,
+                color: Colors.black,
+              ),
+              children: [
+                const TextSpan(
+                  text: 'The new tentative distance is the sum of the current total distance of vertex ',
+                ),
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: VertexTextLabel(label: currentVertex!.label, color: Colors.green.shade300,),
+                ),
+                const TextSpan(
+                  text: ' which is ',
+                ),
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: Text(distances[currentVertex]!.toStringAsFixed(0)),
+                ),
+                const TextSpan(
+                  text: ', and the edge weight of vertex ',
+                ),
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: VertexTextLabel(label: currentNeighbor!.label, color: Colors.yellow.shade300,),
+                ),
+                const TextSpan(
+                  text: ' , which is ',
+                ),
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: Text(currentEdge.weight.toStringAsFixed(0)),
+                ),
+                const TextSpan(
+                  text: ', resulting in ',
+                ),
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: Text(tentativeDistance.toStringAsFixed(0)),
+                ),
+                const TextSpan(
+                  text: '.',
+                ),
+                ...changeInfo,
+              ],
+            ),
+          ),
         ],
       );
     } else if (context.read<AnimationBloc>().state.currentNeighbor != null &&
@@ -301,51 +415,147 @@ class DijkstraCanvas extends StatelessWidget {
       final distances = context.read<AnimationBloc>().state.distances;
       final tentativeDistance = distances[currentVertex]! + currentEdge!.weight;
 
-      String text;
-      if (context.read<AnimationBloc>().state.tentativeDistanceUpdated ?? false) {
-        text = 'The tentative distance of vertex ${currentNeighbor?.label} has been updated to $tentativeDistance.';
-      } else {
-        text = 'The tentative distance of vertex ${currentNeighbor?.label} remains unchanged.';
-      }
-
       var isLastNeighbor = false;
       var neighbors = context.read<AnimationBloc>().state.neighbors;
       if (neighbors.isNotEmpty && neighbors.last == currentNeighbor) {
         isLastNeighbor = true;
       }
-      if (!isLastNeighbor) {
-        text += 'The algorithm will now move to the next neighbouring vertex.';
-      }
 
-      instructionWidgetChild = Text(text);
+      instructionWidgetChild = RichText(
+        text: TextSpan(
+          style: const TextStyle(
+            height: 1.5,
+            color: Colors.black,
+          ),
+          children: [
+            const TextSpan(
+              text: 'The tentative distance of vertex ',
+            ),
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: VertexTextLabel(label: '${currentNeighbor?.label}', color: Colors.yellow.shade300,),
+            ),
+            TextSpan(
+              text: context.read<AnimationBloc>().state.tentativeDistanceUpdated ?? false ? ' has been updated to ${tentativeDistance.toStringAsFixed(0)} and the previous vertex has been set to ' : ' remains unchanged. ',
+            ),
+            if (context.read<AnimationBloc>().state.tentativeDistanceUpdated ?? false)
+              WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
+                child: VertexTextLabel(label: '${currentVertex?.label}', color: Colors.green.shade300,),
+              ),
+            if (context.read<AnimationBloc>().state.tentativeDistanceUpdated ?? false)
+              const TextSpan(
+                text: '.',
+              ),
+            if (!isLastNeighbor)
+              const TextSpan(
+                text: ' The algorithm will now move to the next neighbouring vertex.',
+              ),
+          ],
+        ),
+      );
     } else if (context.read<AnimationBloc>().state.currVertexEdges.isNotEmpty) {
       final currentVertex = context.read<AnimationBloc>().state.currentVertex;
       final neighbors = context.read<AnimationBloc>().state.neighbors;
       if (neighbors.isEmpty) {
-        instructionWidgetChild = Text('Vertex ${currentVertex?.label} has no neighbors');
+        instructionWidgetChild = RichText(
+          text: TextSpan(
+            style: const TextStyle(
+              height: 1.5,
+              color: Colors.black,
+            ),
+            children: [
+              const TextSpan(
+                text: 'The current vertex ',
+              ),
+              WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
+                child: VertexTextLabel(label: '${currentVertex?.label}', color: Colors.green.shade300,),
+              ),
+              const TextSpan(
+                text: ' has no neighbors. The algorithm will now find the next vertex to visit.',
+              ),
+            ],
+          ),
+        );
       } else {
-        var neighborLabel = neighbors.length > 1 ? 'neighbors' : 'neighbor';
-        String neighborLabels = '';
+        List<InlineSpan> neighborWidgets = [];
 
         for (var i = 0; i < neighbors.length; i++) {
-          neighborLabels += neighbors[i].label;
+          neighborWidgets.add(
+            WidgetSpan(
+              child: VertexTextLabel(
+                label: neighbors[i].label,
+                color: Colors.yellow.shade300,
+              ),
+            ),
+          );
 
           if (i != neighbors.length - 1) { // neither the first nor the last element
-            neighborLabels += ', ';
+            neighborWidgets.add(const TextSpan(text: ', '));
           }
 
           if (neighbors.length > 1 && i == neighbors.length - 2) { // last element
-            neighborLabels += ' and ';
+            neighborWidgets.add(const TextSpan(text: ' and '));
             continue;
           }
         }
 
-        instructionWidgetChild = Text('The $neighborLabel: $neighborLabels of the current vertex, ${currentVertex?.label}, ${neighbors.length > 1 ? 'are' : 'is'} highlighted. These are the vertices directly connected to ${currentVertex?.label} via edges. The algorithm will now calculate the tentative shortest path to each of these neighbors.');
+        instructionWidgetChild = RichText(
+          text: TextSpan(
+            style: const TextStyle(
+              height: 1.5,
+              color: Colors.black,
+            ),
+            children: [
+              TextSpan(
+                text: 'The ${neighbors.length > 1 ? 'neighbors' : 'neighbor'} ',
+              ),
+              ...neighborWidgets,
+              const TextSpan(
+                text: ' of the current vertex ',
+              ),
+              WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
+                child: VertexTextLabel(label: '${currentVertex?.label}', color: Colors.green.shade300,),
+              ),
+              TextSpan(
+                text: ' ${neighbors.length > 1 ? 'are' : 'is'} highlighted. ${neighbors.length > 1 ? 'These vertices are' : 'This vertex is'} directly connected to ',
+              ),
+              WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
+                child: VertexTextLabel(label: '${currentVertex?.label}', color: Colors.green.shade300,),
+              ),
+              TextSpan(
+                text: ' via ${neighbors.length > 1 ? 'edges' : 'an edge'}. The algorithm will now calculate the tentative shortest path to each of these neighbors.',
+              ),
+            ],
+          ),
+        );
       }
     } else if (context.read<AnimationBloc>().state.step == AnimationStep.findingCurrentVertex &&
         context.read<AnimationBloc>().state.currentEdge == null &&
         context.read<AnimationBloc>().state.currentNeighbor == null) {
-      instructionWidgetChild = Text('The vertex ${context.read<AnimationBloc>().state.currentVertex?.label} and its neighbours have been evaluated. It will be grayed out in the next step to indicate that it has been visited. The algorithm will now find the next vertex to visit.'); // todo:: describe the criteria for selecting the next vertex
+      instructionWidgetChild = RichText(
+        text: TextSpan(
+          style: const TextStyle(
+            height: 1.5,
+            color: Colors.black,
+          ),
+          children: [
+            const TextSpan(
+              text: 'The vertex ',
+            ),
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: VertexTextLabel(label: '${context.read<AnimationBloc>().state.currentVertex?.label}', color: Colors.green.shade300,),
+            ),
+            const TextSpan(
+              text: ' and its neighbors have been evaluated. It will be grayed out in the next step to indicate that it has been visited. The algorithm will now find the next vertex to visit.',
+            ),
+          ],
+        ),
+      );
     } else if (context.read<AnimationBloc>().state.currentVertex != null) {
       String reason;
       if (context.read<AnimationBloc>().state.currentVertex == context.read<AnimationBloc>().state.startVertex) {
@@ -353,7 +563,23 @@ class DijkstraCanvas extends StatelessWidget {
       } else {
         reason = 'it is the unvisited vertex with the total lowest distance';
       }
-      instructionWidgetChild = Text('Vertex ${context.read<AnimationBloc>().state.currentVertex?.label} is selected because $reason. This vertex is now the current point of consideration. The algorithm will evaluate the shortest path from this vertex to its neighboring vertices.');
+      instructionWidgetChild = RichText(
+        text: TextSpan(
+          style: const TextStyle(
+            height: 1.5,
+            color: Colors.black,
+          ),
+          children: [
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: VertexTextLabel(label: '${context.read<AnimationBloc>().state.currentVertex?.label}', color: Colors.green.shade300,),
+            ),
+            const TextSpan(
+              text: ' is selected as it is the unvisited vertex with the smallest known distance. It is now the current point of consideration. The algorithm will evaluate the shortest path from this vertex to its neighboring vertices.',
+            ),
+          ],
+        ),
+      );
     }
 
     return Expanded(
@@ -443,10 +669,10 @@ class DijkstraCanvas extends StatelessWidget {
 
                 // Displays a table that shows the current state of the algorithm
                 Positioned(
-                  right: 0,
-                  bottom: 60,
-                  child: Container(
-                    width: 200.0,
+                  right: 8.0,
+                  bottom: 60.0,
+                  child: SizedBox(
+                    width: 168.0,
                     height: 400.0,
                     child: ListView.builder(
                       itemCount: context.watch<AnimationBloc>().state.distances.length,
@@ -458,80 +684,103 @@ class DijkstraCanvas extends StatelessWidget {
                         final currentVertex = context.watch<AnimationBloc>().state.currentVertex;
                         final currentNeighbor = context.watch<AnimationBloc>().state.currentNeighbor;
                         Color textColor;
+                        Color color = Colors.transparent;
 
                         if (visitedVertices.contains(vertex)) {
                           textColor = Colors.black12;
                         } else if (currentVertex != null && currentVertex.id == vertex.id) {
                           textColor = Colors.green;
+                          color = textColor.withOpacity(0.1);
                         } else if (currentNeighbor != null && currentNeighbor.id == vertex.id) {
-                          textColor = Colors.yellow;
+                          textColor = Colors.yellow.shade700;
+                          color = textColor.withOpacity(0.05);
                         } else {
                           textColor = Colors.black;
                         }
-                        
-                        return Row(
-                          children: [
-                            Text(
-                              vertex.label,
-                              style: TextStyle(
-                                color: textColor,
+
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 4.0),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12.0),
+                            color: color,
+                          ),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 40.0,
+                                child: Center(
+                                  child: Text(
+                                    vertex.label,
+                                    style: TextStyle(
+                                      color: textColor,
+                                      fontSize: 14.0,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 24.0),
-                            Text(
-                              distance == double.infinity ? '\u221E' : distance.toStringAsFixed(0),
-                              style: TextStyle(
-                                color: textColor,
+                              SizedBox(
+                                width: 40.0,
+                                child: Center(
+                                  child: Text(
+                                    distance == double.infinity ? '\u221E' : distance.toStringAsFixed(0),
+                                    style: TextStyle(
+                                      color: textColor,
+                                      fontSize: 14.0,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 24.0),
-                            Text(
-                              previous?.label ?? 'null',
-                              style: TextStyle(
-                                color: textColor,
+                              SizedBox(
+                                width: 40.0,
+                                child: Center(
+                                  child: Text(
+                                    previous?.label ?? 'null',
+                                    style: TextStyle(
+                                      color: textColor,
+                                      fontSize: 14.0,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         );
                       },
                     ),
                   ),
                 ),
 
-                // Controls for the animation
-                Positioned(
-                  bottom: 16,
-                  right: 16,
-                  left: 16,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8.0),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 8.0,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Shows the visualization information to the user
-                        Visibility(
-                          visible: !context.watch<GraphBloc>().state.isEditing,
-                          child: Padding(
+                // Controls for the animation and visualization information
+                Visibility(
+                  visible: !context.watch<GraphBloc>().state.isEditing,
+                  child: Positioned(
+                    bottom: 16,
+                    right: 16,
+                    left: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8.0,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Shows the visualization information to the user
+                          Padding(
                             padding: const EdgeInsets.only(left: 12.0, bottom: 20.0, right: 12.0, top: 4.0),
                             child: instructionWidgetChild,
                           ),
-                        ),
 
-                        // Animation controls
-                        Visibility(
-                          visible: !context.watch<GraphBloc>().state.isEditing,
-                          child: Row(
+                          // Animation controls
+                          Row(
                             children: [
                               Visibility(
                                 visible: !context.watch<AnimationBloc>().state.isRunning,
@@ -574,8 +823,8 @@ class DijkstraCanvas extends StatelessWidget {
                               ),
                             ],
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -881,6 +1130,38 @@ class _EdgeWeightTextFieldState extends State<EdgeWeightTextField> {
         int weight = int.tryParse(value) ?? 1;
         widget.onWeightChanged(weight);
       },
+    );
+  }
+}
+
+class VertexTextLabel extends StatelessWidget {
+  const VertexTextLabel({super.key, required this.label, this.color = Colors.white});
+
+  final String label;
+  final size = 20.0;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: color,
+        border: Border.all(
+          color: Colors.black,
+          width: 1.0,
+        ),
+        borderRadius: BorderRadius.circular(size / 2),
+      ),
+      child: Center(
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12.0,
+          ),
+        ),
+      ),
     );
   }
 }
