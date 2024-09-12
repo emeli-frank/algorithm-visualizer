@@ -1,11 +1,5 @@
 part of 'dijkstra_screen.dart';
 
-enum GraphTemplate {
-  custom,
-  sample1,
-  random,
-}
-
 class AppBar extends StatelessWidget {
   const AppBar({super.key});
 
@@ -46,7 +40,7 @@ class AppBar extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8.0),
-              const GraphTemplateDropdown(template: GraphTemplate.custom), // todo:: change this default
+              const GraphTemplateDropdown(template: defaultTemplateKey),
               Visibility(
                 visible: !context.watch<GraphBloc>().state.isEditing,
                 child: TextButton(
@@ -89,31 +83,6 @@ class AppBar extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Visibility(
-                      visible:
-                      context.watch<GraphBloc>().state.selectedVertexID != null ||
-                          context.watch<GraphBloc>().state.selectedEdgeID != null,
-                      child: NavIconButton(
-                        onPressed: () {
-                          var selectedVertexID = context.read<GraphBloc>().state.selectedVertexID;
-                          if (selectedVertexID != null) {
-                            context.read<GraphBloc>().add(
-                              VertexDeleted(vertexID: selectedVertexID),
-                            );
-                            return;
-                          }
-
-                          var selectedEdgeID = context.read<GraphBloc>().state.selectedEdgeID;
-                          if (selectedEdgeID != null) {
-                            context.read<GraphBloc>().add(
-                              EdgeDeleted(edgeID: selectedEdgeID),
-                            );
-                          }
-                        },
-                        iconData: Icons.delete_outline,
-                        tooltip: 'Delete (Del)',
-                      ),
-                    ),
                     NavIconButton(
                       onPressed: () {},
                       iconData: Icons.undo,
@@ -154,6 +123,36 @@ class AppBar extends StatelessWidget {
                       isActive: cubit.state.selection == DijkstraTools.edge,
                       tooltip: 'Add Edge',
                     ),
+                    const SizedBox(
+                      height: 18.0,
+                      width: 20.0,
+                      child: VerticalDivider(width: 1, color: Colors.black12),
+                    ),
+                    Visibility(
+                      visible:
+                      context.watch<GraphBloc>().state.selectedVertexID != null ||
+                          context.watch<GraphBloc>().state.selectedEdgeID != null,
+                      child: NavIconButton(
+                        onPressed: () {
+                          var selectedVertexID = context.read<GraphBloc>().state.selectedVertexID;
+                          if (selectedVertexID != null) {
+                            context.read<GraphBloc>().add(
+                              VertexDeleted(vertexID: selectedVertexID),
+                            );
+                            return;
+                          }
+
+                          var selectedEdgeID = context.read<GraphBloc>().state.selectedEdgeID;
+                          if (selectedEdgeID != null) {
+                            context.read<GraphBloc>().add(
+                              EdgeDeleted(edgeID: selectedEdgeID),
+                            );
+                          }
+                        },
+                        iconData: Icons.delete_outline,
+                        tooltip: 'Delete (Del)',
+                      ),
+                    ),
                     Visibility(
                       visible: context.watch<GraphBloc>().state.vertices.isNotEmpty,
                       child: NavIconButton(
@@ -188,14 +187,14 @@ class AppBar extends StatelessWidget {
 class GraphTemplateDropdown extends StatefulWidget {
   const GraphTemplateDropdown({super.key, required this.template});
 
-  final GraphTemplate template;
+  final String template;
 
   @override
   State<GraphTemplateDropdown> createState() => _GraphTemplateDropdownState();
 }
 
 class _GraphTemplateDropdownState extends State<GraphTemplateDropdown> {
-  late GraphTemplate _template;
+  late String _template;
 
   @override
   void initState() {
@@ -205,81 +204,56 @@ class _GraphTemplateDropdownState extends State<GraphTemplateDropdown> {
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButton<GraphTemplate>(
+    List<DropdownMenuItem<String>> prebuiltTemplates = [];
+    final templates = getPreBuiltGraphTemplate();
+
+    for (var templateName in templates.keys) {
+      prebuiltTemplates.add(DropdownMenuItem(
+        value: templateName,
+        child: Text(templateName),
+      ));
+    }
+
+    return DropdownButton<String>(
       style: TextStyle(
         color: Theme.of(context).colorScheme.primary,
         fontSize: 14.0,
       ),
       underline: const SizedBox.shrink(),
-      value: _template,
+      value: _template.toString(),
       items: [
         DropdownMenuItem(
-          value: GraphTemplate.custom,
-          enabled: _template != GraphTemplate.custom,
+          value: customTemplateKey,
+          enabled: _template != customTemplateKey,
           child: const Text('Custom'),
         ),
-        DropdownMenuItem(
-          value: GraphTemplate.sample1,
-          enabled: _template != GraphTemplate.sample1,
-          child: const Text('Sample 1'),
-        ),
+        ...prebuiltTemplates,
         const DropdownMenuItem(
-          value: GraphTemplate.random,
+          value: randomTemplateKey,
           child: Text('Random'),
         ),
       ],
       onChanged: (value) {
         if (value == null ||
-            (value == _template && value != GraphTemplate.random)) return;
+            (value == _template && value != randomTemplateKey)) return;
 
         setState(() {
-          _template = value;
+          if (value == customTemplateKey) {
+            _template = customTemplateKey;
+          } else if (value == randomTemplateKey) {
+            _template = randomTemplateKey;
+          } else {
+            _template = value;
+          }
         });
 
-        List<Vertex> vertices = [];
-        List<Edge> edges = [];
-        bool isEditing = false;
-
-        switch (value) {
-          case GraphTemplate.custom:
-            isEditing = true;
-            break;
-          case GraphTemplate.sample1:
-          // todo:: move to a separate file
-            vertices = const [
-              Vertex(id: 'A1', offset: Offset(256.4, 61.8)),
-              Vertex(id: 'B1', offset: Offset(82.5, 90.2)),
-              Vertex(id: 'C1', offset: Offset(152.5, 131.1)),
-              Vertex(id: 'D1', offset: Offset(248.2, 157.5)),
-              Vertex(id: 'E1', offset: Offset(154.4, 39.5)),
-              Vertex(id: 'F1', offset: Offset(91.5, 198.7)),
-              Vertex(id: 'G1', offset: Offset(191.7, 219.2)),
-            ];
-            edges = [
-              Edge(id: '1', startVertex: vertices[0], endVertex: vertices[1], weight: 2),
-              Edge(id: '2', startVertex: vertices[0], endVertex: vertices[2], weight: 3),
-              Edge(id: '3', startVertex: vertices[0], endVertex: vertices[3], weight: 1),
-              Edge(id: '4', startVertex: vertices[1], endVertex: vertices[4], weight: 1),
-              Edge(id: '5', startVertex: vertices[2], endVertex: vertices[5], weight: 2),
-              Edge(id: '6', startVertex: vertices[3], endVertex: vertices[6], weight: 3),
-              Edge(id: '7', startVertex: vertices[4], endVertex: vertices[6], weight: 1),
-              Edge(id: '8', startVertex: vertices[5], endVertex: vertices[6], weight: 2),
-            ];
-            break;
-          case GraphTemplate.random:
-          // todo:: refine this logic
-            vertices = List.generate(8, (index) {
-              return Vertex(
-                id: index.toString(),
-                offset: Offset(50 + Random().nextDouble() * 400, 50 + Random().nextDouble() * 400),
-              );
-            });
-            break;
-        }
+        final template = getGraphTemplate(value);
+        final vertices = template.vertices;
+        final edges = template.edges;
 
         context.read<AnimationBloc>().add(AnimationReset());
         context.read<GraphBloc>().add(GraphElementReset(vertices: vertices, edges: edges));
-        context.read<GraphBloc>().add(EditModeToggled(isEditing: isEditing));
+        context.read<GraphBloc>().add(EditModeToggled(isEditing: value == customTemplateKey));
       },
     );
   }

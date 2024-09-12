@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:algorithm_visualizer/constants/graph_templates.dart';
 import 'package:algorithm_visualizer/exceptions/max_allowed_vertex_exceeded_exception.dart';
 import 'package:algorithm_visualizer/features/dijkstra/bloc/animation_bloc.dart';
 import 'package:algorithm_visualizer/features/dijkstra/bloc/graph_bloc.dart';

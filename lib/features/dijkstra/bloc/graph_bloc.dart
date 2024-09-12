@@ -10,7 +10,13 @@ part 'graph_state.dart';
 part 'graph_event.dart';
 
 class GraphBloc extends Bloc<GraphEvent, GraphState> {
-  GraphBloc() : super(GraphState()) {
+  GraphBloc({
+    required List<Vertex> vertices,
+    required List<Edge> edges,
+  }) : super(GraphState(
+          vertices: vertices,
+          edges: edges,
+        )) {
     // Adds a new vertex
     on<VertexAdded>((VertexAdded event, Emitter<GraphState> emit) {
       var verticesCopy = [...state.vertices];
@@ -135,7 +141,7 @@ class GraphBloc extends Bloc<GraphEvent, GraphState> {
     });
 
     on<EditModeToggled>((EditModeToggled event, Emitter<GraphState> emit) {
-      emit(state.copyWith(isEditing: event.isEditing));
+      emit(state.copyWith(isEditing: event.isEditing, selectedVertexID: const Optional<String?>(null)));
     });
   }
 }

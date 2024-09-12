@@ -1,3 +1,4 @@
+import 'package:algorithm_visualizer/constants/graph_templates.dart';
 import 'package:algorithm_visualizer/features/a_star/views/a_star_screen.dart';
 import 'package:algorithm_visualizer/features/dijkstra/bloc/animation_bloc.dart';
 import 'package:algorithm_visualizer/features/dijkstra/bloc/graph_bloc.dart';
@@ -68,7 +69,13 @@ class MyApp extends StatelessWidget {
                   ),
                 ),
                 BlocProvider<GraphBloc>(
-                  create: (_) => GraphBloc(),
+                  create: (_) {
+                    final GraphTemplateSample defaultTemplate = getGraphTemplate(defaultTemplateKey);
+                    return GraphBloc(
+                      vertices: defaultTemplate.vertices,
+                      edges: defaultTemplate.edges,
+                    );
+                  },
                 ),
                 BlocProvider<AnimationBloc>(
                   create: (_) => AnimationBloc(),
