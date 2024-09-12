@@ -39,7 +39,7 @@ class DijkstraCanvas extends StatelessWidget {
 
   final vertexRadius = 16.0;
   final edgeThickness = 1.0;
-  final edgeClickableThickness = 8.0;
+  final edgeClickableThickness = 12.0;
 
   bool _isPointOnLineSegment(double x1, double y1, double x2, double y2, double x, double y, double thickness) {
     // Calculate the distance from the point to the line
@@ -338,20 +338,20 @@ class DijkstraCanvas extends StatelessWidget {
                 Visibility(
                   visible: context.watch<GraphBloc>().state.selectedEdgeID != null,
                   child: Positioned(
-                    bottom: 140,
-                    child: SizedBox(
-                      height: 40.0,
-                      width: 60.0,
-                      child: EdgeWeightTextField(
-                        weight: context.watch<GraphBloc>().state.selectedEdge?.weight,
-                        onWeightChanged: (weight) {
-                          var selectedEdge = context.read<GraphBloc>().state.selectedEdge;
-                          if (selectedEdge != null) {
-                            var newEdge = selectedEdge.copyWith(weight: weight);
-                            context.read<GraphBloc>().add(EdgeUpdated(edge: newEdge));
-                          }
-                        },
-                      ),
+                    bottom: 16,
+                    left: 16,
+                    child: EdgeWeightTextField(
+                      weight: context.watch<GraphBloc>().state.selectedEdge?.weight,
+                      onWeightChanged: (weight) {
+                        var selectedEdge = context.read<GraphBloc>().state.selectedEdge;
+                        if (selectedEdge != null) {
+                          var newEdge = selectedEdge.copyWith(weight: weight);
+                          context.read<GraphBloc>().add(EdgeUpdated(edge: newEdge));
+                        }
+                      },
+                      onDone: () {
+                        context.read<GraphBloc>().add(EdgeSelected(edgeID: null));
+                      },
                     ),
                   ),
                 ),
