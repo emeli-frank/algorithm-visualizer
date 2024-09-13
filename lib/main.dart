@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:algorithm_visualizer/constants/graph_templates.dart';
 import 'package:algorithm_visualizer/features/a_star/views/a_star_screen.dart';
 import 'package:algorithm_visualizer/features/dijkstra/bloc/animation_bloc.dart';
@@ -6,27 +8,30 @@ import 'package:algorithm_visualizer/features/dijkstra/cubit/tool_selection_cubi
 import 'package:algorithm_visualizer/features/dijkstra/views/dijkstra_screen.dart';
 import 'package:algorithm_visualizer/features/sidebar/cubit/sidebar_cubit.dart';
 import 'package:algorithm_visualizer/features/sidebar/views/sidebar.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  await windowManager.ensureInitialized();
+    await windowManager.ensureInitialized();
 
-  WindowOptions windowOptions = const WindowOptions(
-    minimumSize: Size(1000, 800),
-    // center: true,
-    // backgroundColor: Colors.transparent,
-    // skipTaskbar: false,
-    titleBarStyle: TitleBarStyle.normal,
-  );
-  windowManager.waitUntilReadyToShow(windowOptions, () async {
-    await windowManager.show();
-    await windowManager.focus();
-  });
+    WindowOptions windowOptions = const WindowOptions(
+      minimumSize: Size(1000, 800),
+      // center: true,
+      // backgroundColor: Colors.transparent,
+      // skipTaskbar: false,
+      titleBarStyle: TitleBarStyle.normal,
+    );
+    windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+    });
+  }
 
   runApp(MyApp());
 }
