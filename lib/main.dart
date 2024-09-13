@@ -6,6 +6,7 @@ import 'package:algorithm_visualizer/features/dijkstra/cubit/tool_selection_cubi
 import 'package:algorithm_visualizer/features/dijkstra/views/dijkstra_screen.dart';
 import 'package:algorithm_visualizer/features/sidebar/cubit/sidebar_cubit.dart';
 import 'package:algorithm_visualizer/features/sidebar/views/sidebar.dart';
+import 'package:algorithm_visualizer/features/test/views/test_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -88,6 +89,11 @@ class MyApp extends StatelessWidget {
             path: '/a-star-visualizer',
             parentNavigatorKey: _shellNavigatorKey,
             builder: (context, state) => const AStarScreen(),
+          ),
+          GoRoute(
+            path: '/test',
+            parentNavigatorKey: _shellNavigatorKey,
+            builder: (context, state) => const TestScreen(),
           ),
         ],
       ),
