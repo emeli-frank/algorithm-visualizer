@@ -133,6 +133,25 @@ class GraphBloc extends Bloc<GraphEvent, GraphState> {
       emit(state.copyWith(edges: edgesCopy));
     });
 
+    // Updates edge's weight
+    on<EdgeWeightUpdated>((EdgeWeightUpdated event, Emitter<GraphState> emit) {
+      _saveStateForUndo();
+
+      var edgesCopy = [...state.edges];
+      for (var i = 0; i < edgesCopy.length; i++) {
+        if (edgesCopy[i].id == event.edgeID) {
+          edgesCopy[i] = edgesCopy[i].copyWith(weight: event.weight);
+          break;
+        }
+      }
+
+      emit(state.copyWith(
+        edges: edgesCopy,
+        canUndo: _undoStack.isNotEmpty,
+        canRedo: _redoStack.isNotEmpty,
+      ));
+    });
+
     // Selects/unselects a vertex
     on<VertexSelected>((VertexSelected event, Emitter<GraphState> emit) {
       emit(state.copyWith(selectedVertexID: Optional<String?>(event.vertexID)));

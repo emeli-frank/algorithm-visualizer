@@ -56,6 +56,13 @@ final class EdgeUpdated extends GraphEvent {
   final Edge edge;
 }
 
+final class EdgeWeightUpdated extends GraphEvent {
+  EdgeWeightUpdated({required this.weight, required this.edgeID});
+
+  final String edgeID;
+  final int weight;
+}
+
 final class VertexSelected extends GraphEvent {
   VertexSelected({required this.vertexID});
 

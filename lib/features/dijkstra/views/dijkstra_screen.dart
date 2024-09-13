@@ -345,8 +345,7 @@ class DijkstraCanvas extends StatelessWidget {
                       onWeightChanged: (weight) {
                         var selectedEdge = context.read<GraphBloc>().state.selectedEdge;
                         if (selectedEdge != null) {
-                          var newEdge = selectedEdge.copyWith(weight: weight);
-                          context.read<GraphBloc>().add(EdgeUpdated(edge: newEdge));
+                          context.read<GraphBloc>().add(EdgeWeightUpdated(weight: weight, edgeID: selectedEdge.id));
                         }
                       },
                       onDone: () {

@@ -55,6 +55,9 @@ class _EdgeWeightTextFieldState extends State<EdgeWeightTextField> {
               ),
               onChanged: (value) {
                 int weight = int.tryParse(value) ?? 1;
+                if (weight < 1) {
+                  weight = 1;
+                }
                 widget.onWeightChanged(weight);
               },
             ),
