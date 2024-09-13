@@ -9,13 +9,14 @@ class VisualizationStateTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentVertex = context.watch<AnimationBloc>().state.currentVertex;
+    final startVertex = context.watch<AnimationBloc>().state.startVertex;
 
     return Column(
       children: [
         Row(
           children: [
             const Cell(label: 'Vertex', fontSize: 11.0, weight: FontWeight.bold),
-            Cell(label: 'Shortest Distance from ${currentVertex?.label}', fontSize: 11.0, weight: FontWeight.bold),
+            Cell(label: 'Shortest Distance from ${startVertex?.label}', fontSize: 11.0, weight: FontWeight.bold),
             const Cell(label: 'Previous', fontSize: 11.0, weight: FontWeight.bold),
           ],
         ),
