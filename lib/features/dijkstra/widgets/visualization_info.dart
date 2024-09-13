@@ -125,7 +125,7 @@ class VisualizationInfo extends StatelessWidget {
                   child: Text(distances[currentVertex]!.toStringAsFixed(0)),
                 ),
                 const TextSpan(
-                  text: ', and the edge weight of vertex ',
+                  text: ', and the weight of the edge to vertex ',
                 ),
                 WidgetSpan(
                   alignment: PlaceholderAlignment.middle,
@@ -183,7 +183,7 @@ class VisualizationInfo extends StatelessWidget {
               child: VertexTextLabel(label: '${currentNeighbor?.label}', color: Colors.yellow.shade300,),
             ),
             TextSpan(
-              text: context.read<AnimationBloc>().state.tentativeDistanceUpdated ?? false ? ' has been updated to ${tentativeDistance.toStringAsFixed(0)} and the previous vertex has been set to ' : ' remains unchanged. ',
+              text: context.read<AnimationBloc>().state.tentativeDistanceUpdated ?? false ? ' has been updated to ${tentativeDistance.toStringAsFixed(0)} and it\'s previous vertex has been set to ' : ' remains unchanged. ',
             ),
             if (context.read<AnimationBloc>().state.tentativeDistanceUpdated ?? false)
               WidgetSpan(
@@ -319,7 +319,14 @@ class VisualizationInfo extends StatelessWidget {
               child: VertexTextLabel(label: '${context.read<AnimationBloc>().state.currentVertex?.label}', color: Colors.green.shade300,),
             ),
             const TextSpan(
-              text: ' is selected as it is the unvisited vertex with the smallest known distance. It is now the current point of consideration. The algorithm will evaluate the shortest path from this vertex to its neighboring vertices.',
+              text: ' is selected as it is the unvisited vertex with the smallest known distance from ',
+            ),
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: VertexTextLabel(label: '${context.read<AnimationBloc>().state.currentVertex?.label}', color: Colors.green.shade300,),
+            ),
+            const TextSpan(
+              text: '. It is now the current point of consideration. The algorithm will evaluate the shortest path from this vertex to its neighboring vertices.',
             ),
           ],
         ),

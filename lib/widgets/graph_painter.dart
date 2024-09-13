@@ -183,7 +183,7 @@ class GraphPainter extends CustomPainter {
       final dy = edge.endVertex.offset.dy - edge.startVertex.offset.dy;
       final angle = atan2(dy, dx);
 
-      // Calculate the arrow position, moving it away from the end vertex
+      /*// Calculate the arrow position, moving it away from the end vertex
       final arrowEndX = edge.endVertex.offset.dx - vertexRadius * cos(angle);
       final arrowEndY = edge.endVertex.offset.dy - vertexRadius * sin(angle);
 
@@ -200,7 +200,7 @@ class GraphPainter extends CustomPainter {
         ..close();
 
       // Draw the arrowhead
-      canvas.drawPath(path, paint);
+      canvas.drawPath(path, paint);*/
 
       // Draw the weight label at the midpoint of the edge
       final midPoint = Offset(
