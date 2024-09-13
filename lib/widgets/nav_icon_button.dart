@@ -25,7 +25,7 @@ class NavIconButton extends StatelessWidget {
           iconSize: 20.0,
           onPressed: onPressed,
           tooltip: tooltip,
-          icon: Icon(iconData, color: color),
+          icon: Icon(iconData, color: onPressed != null ? color : null),
         ),
       ),
     );

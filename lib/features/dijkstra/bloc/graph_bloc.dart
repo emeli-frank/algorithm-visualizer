@@ -10,6 +10,16 @@ part 'graph_state.dart';
 part 'graph_event.dart';
 
 class GraphBloc extends Bloc<GraphEvent, GraphState> {
+  // Stack of previous states
+  final List<GraphState> _undoStack = [];
+
+  // Stack of future states
+  final List<GraphState> _redoStack = [];
+
+  // Offset of the vertex that was previously dragged. Used to determine if to
+  // update undo/redo availability
+  Offset? _previousVertexDragOffset;
+
   GraphBloc({
     required List<Vertex> vertices,
     required List<Edge> edges,
@@ -19,10 +29,16 @@ class GraphBloc extends Bloc<GraphEvent, GraphState> {
         )) {
     // Adds a new vertex
     on<VertexAdded>((VertexAdded event, Emitter<GraphState> emit) {
+      _saveStateForUndo();
+
       var verticesCopy = [...state.vertices];
       verticesCopy.add(event.vertex);
 
-      emit(state.copyWith(vertices: verticesCopy));
+      emit(state.copyWith(
+        vertices: verticesCopy,
+        canUndo: _undoStack.isNotEmpty,
+        canRedo: _redoStack.isNotEmpty,
+      ));
     });
 
     // Updates (the position of) an existing vertex while dragging
@@ -40,20 +56,35 @@ class GraphBloc extends Bloc<GraphEvent, GraphState> {
 
     // Saves the info of the vertex that is currently being dragged
     on<StartVertexDragging>((StartVertexDragging event, Emitter<GraphState> emit) {
+      _previousVertexDragOffset = event.dragStartOffset;
+
       emit(state.copyWith(
         draggedVertexID: Optional<String>(event.draggedVertexID),
         dragStartOffset: Optional<Offset>(event.dragStartOffset),
       ));
     });
 
-    // Resets the info of the vertex being dragged after the dragging is completed
+    // Cleans up drag data after the dragging is completed
     on<CompleteVertexDragging>((
       CompleteVertexDragging event,
       Emitter<GraphState> emit,
     ) {
+      if (_previousVertexDragOffset != null && _previousVertexDragOffset != event.offset) {
+        var updatedVertices = state.vertices.map((vertex) {
+          if (vertex.id == state.draggedVertexID) {
+            return Vertex(id: vertex.id, offset: _previousVertexDragOffset!);
+          }
+          return vertex;
+        }).toList();
+        _saveStateForUndo(vertices: updatedVertices);
+      }
+
+      _previousVertexDragOffset = null;
       emit(state.copyWith(
         draggedVertexID: const Optional<String?>(null),
         dragStartOffset: const Optional<Offset?>(null),
+        canUndo: _undoStack.isNotEmpty,
+        canRedo: _redoStack.isNotEmpty,
       ));
     });
 
@@ -77,10 +108,16 @@ class GraphBloc extends Bloc<GraphEvent, GraphState> {
 
     // Adds a new edge after the drawing is completed
     on<EdgeAdded>((EdgeAdded event, Emitter<GraphState> emit) {
+      _saveStateForUndo();
+
       var edgesCopy = [...state.edges];
       edgesCopy.add(event.edge);
 
-      emit(state.copyWith(edges: edgesCopy));
+      emit(state.copyWith(
+        edges: edgesCopy,
+        canUndo: _undoStack.isNotEmpty,
+        canRedo: _redoStack.isNotEmpty,
+      ));
     });
 
     // Updates (the position of) an existing edge
@@ -103,6 +140,8 @@ class GraphBloc extends Bloc<GraphEvent, GraphState> {
 
     // Deletes a vertex
     on<VertexDeleted>((VertexDeleted event, Emitter<GraphState> emit) {
+      _saveStateForUndo();
+
       var verticesCopy = [...state.vertices];
       verticesCopy.removeWhere((vertex) => vertex.id == event.vertexID);
 
@@ -113,9 +152,12 @@ class GraphBloc extends Bloc<GraphEvent, GraphState> {
 
       emit(
         state.copyWith(
-            vertices: verticesCopy,
-            edges: edgesCopy,
-            selectedVertexID: const Optional<String?>(null)),
+          vertices: verticesCopy,
+          edges: edgesCopy,
+          selectedVertexID: const Optional<String?>(null),
+          canUndo: _undoStack.isNotEmpty,
+          canRedo: _redoStack.isNotEmpty,
+        ),
       );
     });
 
@@ -126,22 +168,76 @@ class GraphBloc extends Bloc<GraphEvent, GraphState> {
 
     // Deletes a edge
     on<EdgeDeleted>((EdgeDeleted event, Emitter<GraphState> emit) {
+      _saveStateForUndo();
+
       var edgesCopy = [...state.edges];
       edgesCopy.removeWhere((edge) => edge.id == event.edgeID);
 
       emit(
         state.copyWith(
-            edges: edgesCopy,
-            selectedVertexID: const Optional<String?>(null)),
+          edges: edgesCopy,
+          selectedVertexID: const Optional<String?>(null),
+          canUndo: _undoStack.isNotEmpty,
+          canRedo: _redoStack.isNotEmpty,
+        ),
       );
     });
 
     on<GraphElementReset>((GraphElementReset event, Emitter<GraphState> emit) {
+      _saveStateForUndo();
+
       emit(state.copyWith(vertices: event.vertices, edges: event.edges));
     });
 
     on<EditModeToggled>((EditModeToggled event, Emitter<GraphState> emit) {
-      emit(state.copyWith(isEditing: event.isEditing, selectedVertexID: const Optional<String?>(null)));
+      emit(state.copyWith(
+        isEditing: event.isEditing,
+        selectedVertexID: const Optional<String?>(null),
+        canUndo: _undoStack.isNotEmpty,
+        canRedo: _redoStack.isNotEmpty,
+      ));
     });
+
+    // Undo event handler
+    on<UndoEvent>((event, emit) {
+      if (_undoStack.isNotEmpty) {
+        // Push the current state to the redo stack before undoing
+        _redoStack.add(state);
+
+        // Pop from the undo stack and emit the previous state
+        final previousState = _undoStack.removeLast();
+        // Emit the previous state and update undo/redo availability
+
+        emit(previousState.copyWith(
+          canUndo: _undoStack.isNotEmpty,
+          canRedo: _redoStack.isNotEmpty,
+        ));
+      }
+    });
+
+    // Redo event handler
+    on<RedoEvent>((event, emit) {
+      if (_redoStack.isNotEmpty) {
+        // Push the current state to the undo stack before redoing
+        _undoStack.add(state);
+
+        // Pop from the redo stack and emit the future state
+        final futureState = _redoStack.removeLast();
+
+        // Emit the future state and update undo/redo availability
+        emit(futureState.copyWith(
+          canUndo: _undoStack.isNotEmpty,
+          canRedo: _redoStack.isNotEmpty,
+        ));
+      }
+    });
+  }
+
+  _saveStateForUndo({List<Vertex>? vertices}) {
+    // Save the current state to the undo stack before modifying it
+    _undoStack.add(state.copyWith(vertices: vertices));
+
+    // Clear the redo stack because a new action invalidates future states
+    _redoStack.clear();
   }
 }

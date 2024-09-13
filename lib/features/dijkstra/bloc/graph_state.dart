@@ -11,6 +11,8 @@ class GraphState extends Equatable {
     this.selectedVertexID,
     this.selectedEdgeID,
     this.isEditing = false,
+    this.canUndo = false,
+    this.canRedo = false,
   })  : vertices = vertices ?? [],
         edges = edges ?? [];
 
@@ -37,6 +39,10 @@ class GraphState extends Equatable {
 
   final bool isEditing;
 
+  final bool canUndo;
+
+  final bool canRedo;
+
   bool get isDraggingVertex => draggedVertexID != null && dragStartOffset != null;
 
   Edge? get selectedEdge {
@@ -59,6 +65,8 @@ class GraphState extends Equatable {
     selectedVertexID,
     selectedEdgeID,
     isEditing,
+    canUndo,
+    canRedo,
   ];
 
   GraphState copyWith({
@@ -71,6 +79,8 @@ class GraphState extends Equatable {
     Optional<String?>? selectedVertexID,
     Optional<String?>? selectedEdgeID,
     bool? isEditing,
+    bool? canUndo,
+    bool? canRedo,
   }) {
     return GraphState(
       vertices: vertices ?? this.vertices,
@@ -82,6 +92,8 @@ class GraphState extends Equatable {
       selectedVertexID: selectedVertexID == null ? this.selectedVertexID : selectedVertexID.value,
       selectedEdgeID: selectedEdgeID == null ? this.selectedEdgeID : selectedEdgeID.value,
       isEditing: isEditing ?? this.isEditing,
+      canUndo: canUndo ?? this.canUndo,
+      canRedo: canRedo ?? this.canRedo,
     );
   }
 }

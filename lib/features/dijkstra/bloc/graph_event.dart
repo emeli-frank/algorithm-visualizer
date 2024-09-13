@@ -25,7 +25,9 @@ final class StartVertexDragging extends GraphEvent {
 }
 
 final class CompleteVertexDragging extends GraphEvent {
-  CompleteVertexDragging();
+  CompleteVertexDragging({required this.offset});
+
+  final Offset offset;
 }
 
 final class EdgeAdded extends GraphEvent {
@@ -92,3 +94,7 @@ final class EditModeToggled extends GraphEvent {
 
   final bool isEditing;
 }
+
+class UndoEvent extends GraphEvent {}
+
+class RedoEvent extends GraphEvent {}
