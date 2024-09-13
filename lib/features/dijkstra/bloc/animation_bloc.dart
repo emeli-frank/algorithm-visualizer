@@ -209,7 +209,11 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
 
   void _processNextStep(AnimationNextStep event, Emitter<AnimationState> emit, AnimationState state) {
     if (state.unvisitedVertices.isEmpty) {
-      emit(state.copyWith(isComplete: true));
+      emit(state.copyWith(
+        isComplete: true,
+        // isRunning: false,
+        currentVertex: const Optional<Vertex?>(null),
+      ));
       return;
     }
 
