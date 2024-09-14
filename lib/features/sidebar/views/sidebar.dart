@@ -67,15 +67,17 @@ class Sidebar extends StatelessWidget {
                   const SidebarSectionTitle(title: 'TESTS'),
                   SidebarListItem(
                     name: 'Pre-test',
-                    isInactive: context.watch<TestBloc>().state.preTestTaken,
+                    isInactive: context.watch<TestBloc>().state.preTestCompleted,
                     onTap: () {
-                      context.go('/test');
+                      context.go('/test/pre-test');
                     },
                   ),
                   SidebarListItem(
                     name: 'Post-test',
-                    isInactive: context.watch<TestBloc>().state.postTestTaken,
-                    onTap: () {},
+                    isInactive: !context.watch<TestBloc>().state.preTestCompleted || context.watch<TestBloc>().state.postTestCompleted,
+                    onTap: () {
+                      context.go('/test/post-test');
+                    },
                   ),
                 ],
               ),

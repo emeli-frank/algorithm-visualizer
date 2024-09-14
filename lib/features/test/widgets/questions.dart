@@ -1,21 +1,16 @@
+import 'package:algorithm_visualizer/features/test/models/graph_test.dart';
 import 'package:flutter/material.dart';
 
 class Questions extends StatefulWidget {
   const Questions({
     super.key,
-    required this.question,
-    required this.options,
-    required this.imagePath,
+    required this.currentQuestion,
     required this.onAnswer,
     required this.selectedOptions,
-    required this.id,
   });
 
-  final int id;
-  final String question;
-  final List<String> options;
-  final String imagePath;
   final List<String> selectedOptions;
+  final GraphTest? currentQuestion;
   final Function(int id, List<String> answers) onAnswer;
 
   @override
@@ -25,25 +20,31 @@ class Questions extends StatefulWidget {
 class _QuestionsState extends State<Questions> {
   @override
   Widget build(BuildContext context) {
+    if (widget.currentQuestion == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return ListView(
       // crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Image.asset(widget.imagePath),
+        Image.asset(widget.currentQuestion!.imagePath),
+        const SizedBox(height: 24.0),
         Text(
-          widget.question,
+          widget.currentQuestion!.question,
           style: const TextStyle(
             fontSize: 24.0,
             fontWeight: FontWeight.w600,
           ),
         ),
+        const SizedBox(height: 12.0),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: widget.options.map((option) {
+          children: widget.currentQuestion!.options.map((option) {
             return Option(
               option: option,
               isSelected: widget.selectedOptions.contains(option),
               onPress: (isSelected) {
-                widget.onAnswer(widget.id, isSelected ? [...widget.selectedOptions, option] : widget.selectedOptions.where((element) => element != option).toList());
+                widget.onAnswer(widget.currentQuestion!.id, isSelected ? [...widget.selectedOptions, option] : widget.selectedOptions.where((element) => element != option).toList());
               },
             );
           }).toList(),

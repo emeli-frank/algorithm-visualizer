@@ -3,54 +3,69 @@ import 'package:algorithm_visualizer/features/test/models/graph_test.dart';
 import 'package:algorithm_visualizer/features/test/widgets/test_completion.dart';
 import 'package:algorithm_visualizer/features/test/widgets/test_instructions.dart';
 import 'package:algorithm_visualizer/features/test/widgets/questions.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TestScreen extends StatefulWidget {
-  const TestScreen({super.key});
+  const TestScreen({super.key, required this.type});
+
+  final String type;
 
   @override
   State<TestScreen> createState() => _TestScreenState();
 }
 
 class _TestScreenState extends State<TestScreen> {
-  bool _isTestStarted = false;
-  bool _isTestCompleted = false;
-  late GraphTest _currentQuestion;
-  late List<GraphTest> questions = context.read<TestBloc>().state.questions;
-
   @override
   void initState() {
     super.initState();
-    _currentQuestion = questions.first;
+    final questions = context.read<TestBloc>().state.questions;
+    context.read<TestBloc>().add(QuestionSelected(id: questions.first.id));
   }
 
   @override
   Widget build(BuildContext context) {
-    Widget child;
+    final isPreTest = widget.type == 'pre-test';
+    final graphTestState = context.watch<TestBloc>().state;
+    final List<GraphTest> questions = graphTestState.questions;
+    final preTestAnswers = graphTestState.preTestAnswers;
+    final postTestAnswers = graphTestState.postTestAnswers;
+    final GraphTest? currentQuestion = questions.firstWhereOrNull((question) => question.id == graphTestState.currentQuestionID);
+    Widget child = const SizedBox();
+    bool isTestStarted = false;
+    if (isPreTest) {
+      isTestStarted = graphTestState.preTestStarted;
+    } else {
+      isTestStarted = graphTestState.postTestStarted;
+    }
+    bool isTestCompleted = false;
+    if (isPreTest) {
+      isTestCompleted = graphTestState.preTestCompleted;
+    } else {
+      isTestCompleted = graphTestState.postTestCompleted;
+    }
 
-    if (!_isTestStarted) {
-      child = TestInstructions();
-    } else if (_isTestStarted && !_isTestCompleted) {
+    if (isTestCompleted) {
+      child = TestCompletion(
+        isPostTest: context.watch<TestBloc>().state.postTestCompleted,
+      );
+    } else if (isTestStarted && currentQuestion != null) {
+      final selectedOptions = isPreTest ? preTestAnswers[currentQuestion.id] ?? [] : postTestAnswers[currentQuestion.id] ?? [];
       child = Questions(
-        id: _currentQuestion.id,
-        question: _currentQuestion.question,
-        options: _currentQuestion.options,
-        imagePath: _currentQuestion.imagePath,
+        currentQuestion: currentQuestion,
         onAnswer: (id, selectedOptions) {
-          context.read<TestBloc>().add(TestAnswerSaved(questionId: id, answers: selectedOptions, isPreTest: true));
+          context.read<TestBloc>().add(TestAnswerSaved(questionId: id, answers: selectedOptions, isPreTest: isPreTest));
         },
-        selectedOptions: context.watch<TestBloc>().state.preTestAnswers[_currentQuestion.id] ?? [],
+        selectedOptions: selectedOptions,
       );
     } else {
-      child = TestCompletion(
-        isPostTest: context.watch<TestBloc>().state.postTestTaken,
-      );
+      child = TestInstructions();
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'),
+        title: Text(isPreTest ? 'Pre test' : 'Post test'),
       ),
       body: Container(
         padding: const EdgeInsets.all(16.0),
@@ -58,38 +73,32 @@ class _TestScreenState extends State<TestScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(child: child),
-            if (!_isTestStarted)
+            if (!isTestStarted && !isTestCompleted)
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
                     onPressed: () {
-                      setState(() {
-                        _isTestStarted = true;
-                      });
+                      context.read<TestBloc>().add(TestStarted(isPreTest: isPreTest));
                     },
                     child: const Text('Start Test'),
                   ),
                 ],
               ),
-            if (_isTestStarted && !_isTestCompleted)
+            if (isTestStarted && !isTestCompleted && currentQuestion != null)
               TestControls(
                 questions: questions,
                 onQuestionSelected: (id) {
-                  final question = questions.firstWhere((question) => question.id == id);
-                  setState(() {
-                    _currentQuestion = question;
-                  });
+                  context.read<TestBloc>().add(QuestionSelected(id: id));
                 },
-                selectedQuestionId: _currentQuestion.id,
-                answers: context.watch<TestBloc>().state.preTestAnswers,
+                selectedQuestionId: currentQuestion.id,
+                answers: isPreTest ? context.watch<TestBloc>().state.preTestAnswers : context.watch<TestBloc>().state.postTestAnswers,
                 testCompleted: () {
-                  setState(() {
-                    _isTestCompleted = true;
-                  });
                   context.read<TestBloc>().add(TestCompleted(
-                    preTestTaken: true,
-                    preTestAnswers: context.watch<TestBloc>().state.preTestAnswers,
+                    preTestCompleted: isPreTest ? true : graphTestState.preTestCompleted,
+                    postTestCompleted: isPreTest ? graphTestState.postTestCompleted : true,
+                    preTestAnswers: context.read<TestBloc>().state.preTestAnswers,
+                    postTestAnswers: context.read<TestBloc>().state.postTestAnswers,
                   ));
                 },
               ),
@@ -140,7 +149,7 @@ class TestControls extends StatelessWidget {
   }
 
   bool _canFinish() {
-    return answers.values.every((element) => element.isNotEmpty);
+    return answers.length == questions.length && answers.values.every((element) => element.isNotEmpty);
   }
 }
 

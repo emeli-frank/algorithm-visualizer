@@ -47,6 +47,7 @@ class MyApp extends StatelessWidget {
 
   final GoRouter _router = GoRouter(
     initialLocation: '/dijkstra-visualizer',
+    // initialLocation: '/test/pre-test',
     navigatorKey: _rootNavigatorKey,
     routes: [
       ShellRoute(
@@ -104,9 +105,12 @@ class MyApp extends StatelessWidget {
             builder: (context, state) => const AStarScreen(),
           ),
           GoRoute(
-            path: '/test',
+            path: '/test/:type',
             parentNavigatorKey: _shellNavigatorKey,
-            builder: (context, state) => const TestScreen(),
+            builder: (context, state) {
+              final type = state.pathParameters['type'];
+              return TestScreen(type: type!);
+            },
           ),
         ],
       ),

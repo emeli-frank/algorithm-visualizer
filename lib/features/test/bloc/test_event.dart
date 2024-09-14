@@ -7,16 +7,16 @@ sealed class TestEvent extends Equatable {
 
 final class TestCompleted extends TestEvent {
   TestCompleted({
-    this.preTestTaken = false,
-    this.postTestTaken = false,
+    this.preTestCompleted = false,
+    this.postTestCompleted = false,
     this.preTestAnswers = const {},
     this.postTestAnswers = const {},
   });
 
   final Map<int, List<String>> preTestAnswers;
   final Map<int, List<String>> postTestAnswers;
-  final bool preTestTaken;
-  final bool postTestTaken;
+  final bool preTestCompleted;
+  final bool postTestCompleted;
 }
 
 final class TestRequested extends TestEvent {}
@@ -33,6 +33,18 @@ final class TestSubmitted extends TestEvent {
   TestSubmitted(this.answers);
 
   final List<Map<int, List<String>>> answers;
+}
+
+final class QuestionSelected extends TestEvent {
+  QuestionSelected({required this.id});
+
+  final int id;
+}
+
+final class TestStarted extends TestEvent {
+  TestStarted({required this.isPreTest});
+
+  final bool isPreTest;
 }
 
 /*final class TestsLoaded extends TestEvent {

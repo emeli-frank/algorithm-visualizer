@@ -10,8 +10,10 @@ class TestBloc extends Bloc<TestEvent, TestState> {
   TestBloc({required this.repo}) : super(const TestState()) {
     on<TestCompleted>((TestCompleted event, Emitter<TestState> emit) {
       emit(state.copyWith(
-        preTestTaken: event.preTestTaken,
-        postTestTaken: event.postTestTaken,
+        preTestCompleted: event.preTestCompleted,
+        postTestCompleted: event.postTestCompleted,
+        postTestStarted: false,
+        preTestStarted: false,
         preTestAnswers: event.preTestAnswers,
         postTestAnswers: event.postTestAnswers,
       ));
@@ -31,6 +33,18 @@ class TestBloc extends Bloc<TestEvent, TestState> {
         postTestAnswers[event.questionId] = event.answers;
       }
       emit(state.copyWith(preTestAnswers: preTestAnswers, postTestAnswers: postTestAnswers));
+    });
+
+    on<QuestionSelected>((QuestionSelected event, Emitter<TestState> emit) {
+      emit(state.copyWith(currentQuestionID: event.id));
+    });
+
+    on<TestStarted>((TestStarted event, Emitter<TestState> emit) {
+      if (event.isPreTest) {
+        emit(state.copyWith(preTestStarted: true));
+      } else {
+        emit(state.copyWith(postTestStarted: true));
+      }
     });
   }
 
