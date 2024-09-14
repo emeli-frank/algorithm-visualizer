@@ -84,12 +84,16 @@ class AppBar extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     NavIconButton(
-                      onPressed: () {},
+                      onPressed: context.watch<GraphBloc>().state.canUndo ? () {
+                        context.read<GraphBloc>().add(UndoEvent());
+                      } : null,
                       iconData: Icons.undo,
                       tooltip: 'Undo (Ctrl + Z)',
                     ),
                     NavIconButton(
-                      onPressed: () {},
+                      onPressed: context.watch<GraphBloc>().state.canRedo ? () {
+                        context.read<GraphBloc>().add(RedoEvent());
+                      } : null,
                       iconData: Icons.redo,
                       tooltip: 'Redo (Ctrl + Shift + Z)',
                     ),

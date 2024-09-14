@@ -60,7 +60,6 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
   late List<Vertex> vertices;
   late List<Edge> edges;
   late Vertex currentVertex;
-  Edge? currentEdge;
   List<Edge>? currVertexEdges;
   List<Edge> _visitedEdges = [];
 
@@ -126,13 +125,22 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
 
   void _findCurrentEdges(Emitter<AnimationState> emit) {
     // Get all the edges starting from the current vertex
-    currVertexEdges =
-        edges.where((edge) => edge.startVertex == currentVertex).toList();
+    currVertexEdges = edges
+        .where((edge) =>
+            (state.unvisitedVertices.contains(edge.endVertex) &&
+                edge.startVertex == currentVertex) ||
+            (state.unvisitedVertices.contains(edge.startVertex) &&
+                edge.endVertex == currentVertex))
+        .toList();
     _visitedEdges.addAll(currVertexEdges ?? []);
 
     List<Vertex> neighbors = [];
     for (var edge in currVertexEdges!) {
-      neighbors.add(edge.endVertex);
+      if (edge.startVertex == currentVertex) {
+        neighbors.add(edge.endVertex);
+      } else {
+        neighbors.add(edge.startVertex);
+      }
     }
 
     emit(state.copyWith(
@@ -156,8 +164,10 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
       }
     }
 
-    currentEdge = currVertexEdges!.removeAt(0);
-    final neighbor = currentEdge?.endVertex;
+    final currentEdge = currVertexEdges!.removeAt(0);
+    final neighbor = currentEdge.startVertex == currentVertex
+        ? currentEdge.endVertex
+        : currentEdge.startVertex;
 
     // Set next step to AnimationStep.findingCurrentEdge2 to proceed to sister function
     emit(state.copyWith(
@@ -168,7 +178,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
   }
 
   void _findCurrentEdge2(AnimationState state, Emitter<AnimationState> emit) {
-    final neighbor = currentEdge!.endVertex;
+    final neighbor = state.currentNeighbor!;
     if (!state.unvisitedVertices.contains(neighbor)) {
       emit(state.copyWith(currentEdge: const Optional<Edge?>(null)));
       return;
@@ -176,7 +186,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
 
     final distances = {...state.distances};
     final previousVertices = {...state.previousVertices};
-    final newDist = distances[currentVertex]! + currentEdge!.weight;
+    final newDist = distances[currentVertex]! + state.currentEdge!.weight;
 
     var tentativeDistanceUpdated = false;
 
@@ -191,7 +201,6 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     emit(state.copyWith(
       distances: distances,
       previousVertices: previousVertices,
-      currentEdge: Optional<Edge?>(currentEdge),
       currentNeighbor: Optional(neighbor),
       step: const Optional<AnimationStep>(AnimationStep.findingCurrentEdge),
       tentativeDistanceUpdated: Optional(tentativeDistanceUpdated),
@@ -200,7 +209,11 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
 
   void _processNextStep(AnimationNextStep event, Emitter<AnimationState> emit, AnimationState state) {
     if (state.unvisitedVertices.isEmpty) {
-      emit(state.copyWith(isComplete: true));
+      emit(state.copyWith(
+        isComplete: true,
+        // isRunning: false,
+        currentVertex: const Optional<Vertex?>(null),
+      ));
       return;
     }
 

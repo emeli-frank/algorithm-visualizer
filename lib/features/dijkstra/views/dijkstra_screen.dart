@@ -140,8 +140,8 @@ class DijkstraCanvas extends StatelessWidget {
     }
   }
 
-  void _endDraggingVertex(BuildContext context) {
-    context.read<GraphBloc>().add(CompleteVertexDragging());
+  void _endDraggingVertex(BuildContext context, Offset offset) {
+    context.read<GraphBloc>().add(CompleteVertexDragging(offset: offset));
   }
 
   // Set start vertex for edge drawing
@@ -245,7 +245,7 @@ class DijkstraCanvas extends StatelessWidget {
       };
 
       onPanEndHandler = (details) {
-        _endDraggingVertex(context);
+        _endDraggingVertex(context, details.localPosition);
       };
 
       cursor = SystemMouseCursors.grab;
@@ -345,8 +345,7 @@ class DijkstraCanvas extends StatelessWidget {
                       onWeightChanged: (weight) {
                         var selectedEdge = context.read<GraphBloc>().state.selectedEdge;
                         if (selectedEdge != null) {
-                          var newEdge = selectedEdge.copyWith(weight: weight);
-                          context.read<GraphBloc>().add(EdgeUpdated(edge: newEdge));
+                          context.read<GraphBloc>().add(EdgeWeightUpdated(weight: weight, edgeID: selectedEdge.id));
                         }
                       },
                       onDone: () {
