@@ -1,4 +1,5 @@
 import 'package:algorithm_visualizer/features/sidebar/cubit/sidebar_cubit.dart';
+import 'package:algorithm_visualizer/features/test/bloc/test_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,6 +11,8 @@ class Sidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentUrl = GoRouter.of(context).routerDelegate.currentConfiguration.fullPath;
+
     return SizedBox(
       width: 220.0,
       child: Container(
@@ -64,12 +67,14 @@ class Sidebar extends StatelessWidget {
                   const SidebarSectionTitle(title: 'TESTS'),
                   SidebarListItem(
                     name: 'Pre-test',
+                    isInactive: context.watch<TestBloc>().state.preTestTaken,
                     onTap: () {
                       context.go('/test');
                     },
                   ),
                   SidebarListItem(
                     name: 'Post-test',
+                    isInactive: context.watch<TestBloc>().state.postTestTaken,
                     onTap: () {},
                   ),
                 ],
@@ -83,22 +88,34 @@ class Sidebar extends StatelessWidget {
 }
 
 class SidebarListItem extends StatelessWidget {
-  const SidebarListItem({super.key, required this.name, required this.onTap});
+  const SidebarListItem({super.key, required this.name, required this.onTap, this.isInactive = false, this.isSelected = false});
 
   final String name;
   final Function() onTap;
+  final bool isSelected;
+  final bool isInactive;
 
   @override
   Widget build(BuildContext context) {
-    // return Padding(padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0), child: Text(name),);
+    Color? color;
+    if (isInactive) {
+      color = Theme.of(context).colorScheme.primary.withOpacity(0.5);
+    } else {
+      if (isSelected) {
+        color = Theme.of(context).colorScheme.secondary;
+      } else {
+        color = Theme.of(context).colorScheme.primary;
+      }
+    }
+
     return InkWell(
-      onTap: onTap,
+      onTap: isInactive ? null : onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
         child: Text(
           name,
           style: TextStyle(
-            color: Theme.of(context).colorScheme.primary,
+            color: color,
           ),
         ),
       ),

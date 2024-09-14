@@ -8,6 +8,7 @@ import 'package:algorithm_visualizer/features/dijkstra/cubit/tool_selection_cubi
 import 'package:algorithm_visualizer/features/dijkstra/views/dijkstra_screen.dart';
 import 'package:algorithm_visualizer/features/sidebar/cubit/sidebar_cubit.dart';
 import 'package:algorithm_visualizer/features/sidebar/views/sidebar.dart';
+import 'package:algorithm_visualizer/features/test/bloc/test_bloc.dart';
 import 'package:algorithm_visualizer/features/test/views/test_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -54,6 +55,9 @@ class MyApp extends StatelessWidget {
               providers: [
                 BlocProvider<SidebarCubit>(
                   create: (_) => SidebarCubit(const SidebarState(isOpen: true)),
+                ),
+                BlocProvider<TestBloc>(
+                  create: (_) => TestBloc(),
                 ),
               ],
               child: ShellScaffold(child: child),
