@@ -6,14 +6,6 @@ import 'package:algorithm_visualizer/features/test/widgets/questions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-List<String> options = [
-  'A',
-  'B',
-  'C',
-  'D',
-  'E',
-];
-
 class TestScreen extends StatefulWidget {
   const TestScreen({super.key});
 
@@ -26,12 +18,7 @@ class _TestScreenState extends State<TestScreen> {
   bool _isTestCompleted = false;
   late GraphTest _currentQuestion;
   late Map<int, List<String>> _answers;
-
-  List<GraphTest> questions = [
-    GraphTest(id: 1, question: "Question one.", imagePath: "assets/images/graph1.png", options: options),
-    GraphTest(id: 2, question: "Question two.", imagePath: "assets/images/graph1.png", options: options),
-    GraphTest(id: 3, question: "Question three.", imagePath: "assets/images/graph1.png", options: options),
-  ];
+  late List<GraphTest> questions = context.read<TestBloc>().state.questions;
 
   @override
   void initState() {

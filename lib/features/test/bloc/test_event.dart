@@ -18,3 +18,17 @@ final class TestCompleted extends TestEvent {
   final bool preTestTaken;
   final bool postTestTaken;
 }
+
+final class TestRequested extends TestEvent {}
+
+final class TestSubmitted extends TestEvent {
+  TestSubmitted(this.answers);
+
+  final List<Map<int, List<String>>> answers;
+}
+
+/*final class TestsLoaded extends TestEvent {
+  TestsLoaded(this.tests);
+
+  final List<GraphTest> tests;
+}*/

@@ -6,12 +6,14 @@ class TestState extends Equatable {
     this.postTestTaken = false,
     this.preTestAnswers = const {},
     this.postTestAnswers = const {},
+    this.questions = const [],
   });
 
   final Map<int, List<String>> preTestAnswers;
   final Map<int, List<String>> postTestAnswers;
   final bool preTestTaken;
   final bool postTestTaken;
+  final List<GraphTest> questions;
 
   @override
   List<Object?> get props => [];
@@ -21,12 +23,14 @@ class TestState extends Equatable {
     Map<int, List<String>>? postTestAnswers,
     bool? preTestTaken,
     bool? postTestTaken,
+    List<GraphTest>? questions,
   }) {
     return TestState(
       preTestAnswers: preTestAnswers ?? this.preTestAnswers,
       postTestAnswers: postTestAnswers ?? this.postTestAnswers,
       preTestTaken: preTestTaken ?? this.preTestTaken,
       postTestTaken: postTestTaken ?? this.postTestTaken,
+      questions: questions ?? this.questions,
     );
   }
 }
