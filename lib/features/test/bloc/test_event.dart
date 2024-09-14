@@ -21,6 +21,14 @@ final class TestCompleted extends TestEvent {
 
 final class TestRequested extends TestEvent {}
 
+final class TestAnswerSaved extends TestEvent {
+  TestAnswerSaved({required this.answers, required this.isPreTest, required this.questionId});
+
+  final List<String> answers;
+  final int questionId;
+  final bool isPreTest;
+}
+
 final class TestSubmitted extends TestEvent {
   TestSubmitted(this.answers);
 

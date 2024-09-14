@@ -16,7 +16,13 @@ class TestState extends Equatable {
   final List<GraphTest> questions;
 
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [
+    preTestAnswers,
+    postTestAnswers,
+    preTestTaken,
+    postTestTaken,
+    questions,
+  ];
 
   TestState copyWith({
     Map<int, List<String>>? preTestAnswers,

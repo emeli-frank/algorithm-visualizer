@@ -21,6 +21,17 @@ class TestBloc extends Bloc<TestEvent, TestState> {
       final questions = repo.fetchTest();
       emit(state.copyWith(questions: questions));
     });
+
+    on<TestAnswerSaved>((TestAnswerSaved event, Emitter<TestState> emit) {
+      final preTestAnswers = {...state.preTestAnswers};
+      final postTestAnswers = {...state.postTestAnswers};
+      if (event.isPreTest) {
+        preTestAnswers[event.questionId] = event.answers;
+      } else {
+        postTestAnswers[event.questionId] = event.answers;
+      }
+      emit(state.copyWith(preTestAnswers: preTestAnswers, postTestAnswers: postTestAnswers));
+    });
   }
 
   final TestRepository repo;

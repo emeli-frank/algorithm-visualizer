@@ -17,14 +17,12 @@ class _TestScreenState extends State<TestScreen> {
   bool _isTestStarted = false;
   bool _isTestCompleted = false;
   late GraphTest _currentQuestion;
-  late Map<int, List<String>> _answers;
   late List<GraphTest> questions = context.read<TestBloc>().state.questions;
 
   @override
   void initState() {
     super.initState();
     _currentQuestion = questions.first;
-    _answers = { for (var question in questions) question.id : [] };
   }
 
   @override
@@ -40,10 +38,9 @@ class _TestScreenState extends State<TestScreen> {
         options: _currentQuestion.options,
         imagePath: _currentQuestion.imagePath,
         onAnswer: (id, selectedOptions) {
-          setState(() {
-            _answers[id] = selectedOptions;
-          });
-        }, selectedOptions: _answers[_currentQuestion.id] ?? [],
+          context.read<TestBloc>().add(TestAnswerSaved(questionId: id, answers: selectedOptions, isPreTest: true));
+        },
+        selectedOptions: context.watch<TestBloc>().state.preTestAnswers[_currentQuestion.id] ?? [],
       );
     } else {
       child = TestCompletion(
@@ -85,14 +82,14 @@ class _TestScreenState extends State<TestScreen> {
                   });
                 },
                 selectedQuestionId: _currentQuestion.id,
-                answers: _answers,
+                answers: context.watch<TestBloc>().state.preTestAnswers,
                 testCompleted: () {
                   setState(() {
                     _isTestCompleted = true;
                   });
                   context.read<TestBloc>().add(TestCompleted(
                     preTestTaken: true,
-                    preTestAnswers: _answers,
+                    preTestAnswers: context.watch<TestBloc>().state.preTestAnswers,
                   ));
                 },
               ),
