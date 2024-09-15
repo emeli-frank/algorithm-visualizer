@@ -169,14 +169,14 @@ class AppBar extends StatelessWidget {
                         context.read<GraphBloc>().add(UndoEvent());
                       } : null,
                       iconData: Icons.undo,
-                      tooltip: 'Undo (Ctrl + Z)',
+                      tooltip: 'Undo',
                     ),
                     NavIconButton(
                       onPressed: context.watch<GraphBloc>().state.canRedo ? () {
                         context.read<GraphBloc>().add(RedoEvent());
                       } : null,
                       iconData: Icons.redo,
-                      tooltip: 'Redo (Ctrl + Shift + Z)',
+                      tooltip: 'Redo',
                     ),
                     // Add vertical demarcation
                     const SizedBox(

@@ -57,12 +57,12 @@ class Sidebar extends StatelessWidget {
                       context.go('/dijkstra-visualizer');
                     },
                   ),
-                  SidebarListItem(
+                  /*SidebarListItem(
                     name: 'A (A-star) Algorithm*',
                     onTap: () {
                       context.go('/a-star-visualizer');
                     },
-                  ),
+                  ),*/
                   const SizedBox(height: 24.0),
                   const SidebarSectionTitle(title: 'TESTS'),
                   SidebarListItem(

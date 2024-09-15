@@ -184,14 +184,11 @@ Map<String, GraphTemplateSample> _templates = {
 
 GraphTemplateSample getGraphTemplate(String key) {
   if (key == randomTemplateKey) { // todo:: update logic
+    final randomVertices = generateRandomVertices(numberOfVertices: 8, canvasSize: const Size(300, 300));
+    final randomEdges = generateEdges(randomVertices, 10);
     return GraphTemplateSample(
-      vertices: List.generate(8, (index) {
-        return Vertex(
-          id: index.toString(),
-          offset: Offset(50 + Random().nextDouble() * 400, 50 + Random().nextDouble() * 400),
-        );
-      }),
-      edges: [],
+      vertices: randomVertices,
+      edges: randomEdges,
     );
   }
 
@@ -204,4 +201,69 @@ GraphTemplateSample getGraphTemplate(String key) {
 
 Map<String, GraphTemplateSample> getPreBuiltGraphTemplate() {
   return _templates;
+}
+
+List<Vertex> generateRandomVertices({
+  required int numberOfVertices,
+  required Size canvasSize,
+  double minDistance = 50.0,
+}) {
+  List<Vertex> vertices = [];
+  Random random = Random();
+  int retries = 0;
+
+  bool isTooClose(Offset position) {
+    for (Vertex vertex in vertices) {
+      double distance = (vertex.offset - position).distance;
+      if (distance < minDistance) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  for (int i = 0; i < numberOfVertices; i++) {
+    bool positionIsValid = false;
+    Offset randomPosition;
+
+    // Try to generate a valid random position
+    do {
+      randomPosition = Offset(
+        random.nextDouble() * canvasSize.width,
+        random.nextDouble() * canvasSize.height,
+      );
+
+      if (!isTooClose(randomPosition)) {
+        positionIsValid = true;
+      } else {
+        retries++;
+        // If retried too many times, loosen the constraints (increase minDistance)
+        if (retries > 1000) {
+          minDistance -= 5;
+        }
+      }
+    } while (!positionIsValid);
+
+    vertices.add(Vertex(id: '$i', offset: randomPosition));
+  }
+
+  return vertices;
+}
+
+// Randomly connect vertices with edges
+List<Edge> generateEdges(List<Vertex> vertices, int numberOfEdges) {
+  Random random = Random();
+  List<Edge> edges = [];
+
+  while (edges.length < numberOfEdges) {
+    Vertex start = vertices[random.nextInt(vertices.length)];
+    Vertex end = vertices[random.nextInt(vertices.length)];
+
+    // Ensure no self-loops and no duplicate edges
+    if (start != end && !edges.any((e) => (e.startVertex == start && e.endVertex == end) || (e.startVertex == end && e.endVertex == start))) {
+      edges.add(Edge(id: Edge.generateID(), startVertex: start, endVertex: end, weight: random.nextInt(10) + 1));
+    }
+  }
+
+  return edges;
 }
