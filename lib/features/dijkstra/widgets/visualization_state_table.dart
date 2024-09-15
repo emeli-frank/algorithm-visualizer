@@ -29,7 +29,7 @@ class VisualizationStateTable extends StatelessWidget {
   Widget _buildTable({required BuildContext context, required Vertex? currentVertex}) {
     var distances = context.watch<AnimationBloc>().state.distances;
     var previousVertices = context.watch<AnimationBloc>().state.previousVertices;
-    final visitedVertices = context.watch<AnimationBloc>().state.visitedEdges.map((e) => e.startVertex).toSet();
+    final unVisitedVertices = context.watch<AnimationBloc>().state.unvisitedVertices;
     final currentNeighbor = context.watch<AnimationBloc>().state.currentNeighbor;
 
     List<Widget> rows = [];
@@ -39,17 +39,25 @@ class VisualizationStateTable extends StatelessWidget {
       var previous = previousVertices.values.toList()[i];
       var vertex = distances.keys.toList()[i];
       Color textColor;
-      Color color = Colors.transparent;
+      Color bgColor = Colors.transparent;
 
-      if (visitedVertices.contains(vertex)) {
+      if (!unVisitedVertices.contains(vertex) && vertex != currentVertex) {
+
+        // Visited vertex
         textColor = Colors.black12;
       } else if (currentVertex != null && currentVertex.id == vertex.id) {
+
+        // Current vertex
         textColor = Colors.green;
-        color = textColor.withOpacity(0.1);
+        bgColor = textColor.withOpacity(0.1);
       } else if (currentNeighbor != null && currentNeighbor.id == vertex.id) {
+
+        // Current neighbor being evaluated
         textColor = Colors.yellow.shade700;
-        color = textColor.withOpacity(0.05);
+        bgColor = textColor.withOpacity(0.05);
       } else {
+
+        // Default
         textColor = Colors.black;
       }
 
@@ -58,7 +66,7 @@ class VisualizationStateTable extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 4.0),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12.0),
-              color: color,
+              color: bgColor,
             ),
             child: Row(
               children: [
