@@ -82,7 +82,7 @@ class _EdgeWeightTextFieldState extends State<EdgeWeightTextField> {
             onPressed: () {
               widget.onRandomValue();
             },
-            child: const Text('Random value for all edges'),
+            child: const Text('Randomize weight for all edges'),
           ),
         ],
       ),
