@@ -3,12 +3,12 @@ import 'package:algorithm_visualizer/features/test/models/graph_test.dart';
 List<GraphTest> questions = [
   const GraphTest(
     id: 1,
-    question: "Considering the graph and the table above, assuming the neighbouring vertex G and I have been evaluated and their distances from the starting vertex has been updated, what would be the next vertex to visit? Which vertex will be visited next? (Previously explored vertices are shown in faint green)",
+    question: "Considering the graph and the table above, assuming the neighbouring vertex G and I have been evaluated and their distances from the starting vertex has been updated in the table, which vertex will be visited next? (Previously explored vertices are shown in a faint color)",
     imagePath: "assets/images/graph1.png",
     options: [
-      'G',
+      'G', // Correct answer
+      'H',
       'I',
-      'B',
       'I have no idea',
     ],
   ),
@@ -30,9 +30,9 @@ List<GraphTest> questions = [
     question: "After visiting vertex E, which of its neighbouring vertices will have their shortest distance updated?",
     imagePath: "assets/images/graph3.png",
     options: [
-      'C',
-      'I',
-      'F',
+      'C', // Neighbor but not updated
+      'I', // Correct answer
+      'F', // Correct answer
       'I have no idea',
     ],
   ),
@@ -61,24 +61,24 @@ List<GraphTest> questions = [
   ),
   const GraphTest(
     id: 6,
-    question: "Using the graph, what is the shortest distance from vertex X to the start vertex X?",
+    question: "Using the graph, what is the shortest distance from vertex G to the start vertex A?",
     imagePath: "assets/images/graph5.png",
     options: [
-      '4',
       '2',
-      '6',
-      'Not obtainable',
+      '3',
+      '4', // Correct answer
+      'I have no idea',
     ],
   ),
   const GraphTest(
     id: 7,
-    question: "Using the graph, what vertices are along the shortest path from vertex X to vertex X?",
+    question: "Using the graph, what vertices are along the shortest path from vertex G to vertex A?",
     imagePath: "assets/images/graph5.png",
     options: [
-      '4',
-      '2',
-      '6',
-      'Not obtainable',
+      'ADG', // Correct answer
+      'ACFG',
+      'ABEG',
+      'I have no idea',
     ],
   ),
 ];
