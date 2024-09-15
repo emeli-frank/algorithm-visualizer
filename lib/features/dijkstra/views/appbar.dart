@@ -58,6 +58,30 @@ class AppBar extends StatelessWidget {
                 ),
               ),
               Visibility(
+                visible: !context.watch<GraphBloc>().state.isEditing,
+                child: TextButton(
+                  onPressed: () {
+                    final vertices = context.read<GraphBloc>().state.vertices;
+                    final edges = context.read<GraphBloc>().state.edges;
+                    final template = GraphTemplateSample(vertices: vertices, edges: edges);
+                    final String graphJson = jsonEncode(template.toJson());
+                    print('Serialized Graph: $graphJson');
+
+                    final Map<String, dynamic> graphMap = jsonDecode(graphJson);
+                    final GraphTemplateSample deserializedGraph = GraphTemplateSample.fromJson(graphMap);
+                    print('Deserialized Graph: ${deserializedGraph.vertices}');
+                  },
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.cloud_download_outlined, size: 16.0,),
+                      SizedBox(width: 8),
+                      Text('Save graph'),
+                    ],
+                  ),
+                ),
+              ),
+              Visibility(
                 visible: context.watch<GraphBloc>().state.isEditing,
                 child: TextButton(
                   onPressed: () {

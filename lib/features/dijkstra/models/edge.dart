@@ -25,6 +25,22 @@ class Edge extends Equatable {
     return List.generate(16, (index) => chars[rand.nextInt(chars.length)]).join();
   }
 
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'startVertex': startVertex.toJson(),
+    'endVertex': endVertex.toJson(),
+    'weight': weight,
+  };
+
+  factory Edge.fromJson(Map<String, dynamic> json) {
+    return Edge(
+      id: json['id'] as String,
+      startVertex: Vertex.fromJson(json['startVertex'] as Map<String, dynamic>),
+      endVertex: Vertex.fromJson(json['endVertex'] as Map<String, dynamic>),
+      weight: json['weight'] as int,
+    );
+  }
+
   Edge copyWith({
     String? id,
     Vertex? startVertex,

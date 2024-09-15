@@ -17,4 +17,19 @@ class Vertex extends Equatable {
 
   @override
   List<Object> get props => [id, offset];
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'offset': {'dx': offset.dx, 'dy': offset.dy},
+  };
+
+  factory Vertex.fromJson(Map<String, dynamic> json) {
+    return Vertex(
+      id: json['id'] as String,
+      offset: Offset(
+        (json['offset']['dx'] as num).toDouble(),
+        (json['offset']['dy'] as num).toDouble(),
+      ),
+    );
+  }
 }

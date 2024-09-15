@@ -9,6 +9,22 @@ class GraphTemplateSample {
 
   final List<Vertex> vertices;
   final List<Edge> edges;
+
+  Map<String, dynamic> toJson() => {
+    'vertices': vertices.map((v) => v.toJson()).toList(),
+    'edges': edges.map((e) => e.toJson()).toList(),
+  };
+
+  factory GraphTemplateSample.fromJson(Map<String, dynamic> json) {
+    return GraphTemplateSample(
+      vertices: (json['vertices'] as List)
+          .map((v) => Vertex.fromJson(v as Map<String, dynamic>))
+          .toList(),
+      edges: (json['edges'] as List)
+          .map((e) => Edge.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
 }
 
 /*
