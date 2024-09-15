@@ -12,7 +12,7 @@ class TestCompletion extends StatelessWidget {
     if (!isPostTest) {
       message = 'Pre-test Completed. Please proceed to see the demonstration of Dijkstra\'s Algorithm by selecting that option from the sidebar.';
     } else {
-      message = 'Post-test Completed. The exercise is now complete. You can play around with the graph tool and after that, please proceed to fill out the questioner that you have received.';
+      message = 'Post-test Completed. The exercise is now complete. You can play around with the graph tool and after that, please proceed to fill out the questionnaire that you have received.';
     }
 
     return Padding(

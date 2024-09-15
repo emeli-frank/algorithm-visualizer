@@ -1,8 +1,10 @@
+import 'package:algorithm_visualizer/features/sidebar/cubit/sidebar_cubit.dart';
 import 'package:algorithm_visualizer/features/test/bloc/test_bloc.dart';
 import 'package:algorithm_visualizer/features/test/models/graph_test.dart';
 import 'package:algorithm_visualizer/features/test/widgets/test_completion.dart';
 import 'package:algorithm_visualizer/features/test/widgets/test_instructions.dart';
 import 'package:algorithm_visualizer/features/test/widgets/questions.dart';
+import 'package:algorithm_visualizer/widgets/nav_icon_button.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -63,9 +65,26 @@ class _TestScreenState extends State<TestScreen> {
       child = TestInstructions();
     }
 
+    String title = isPreTest ? 'Pre test' : 'Post test';
+    title += ' - Question ${currentQuestion?.id ?? 1} of ${questions.length}';
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(isPreTest ? 'Pre test' : 'Post test'),
+        toolbarHeight: 40.0,
+        leading: Visibility(
+          visible: !context.watch<SidebarCubit>().state.isOpen,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: NavIconButton(
+              iconData: Icons.menu_open_outlined,
+              onPressed: () {
+                context.read<SidebarCubit>().toggle(isOpen: true);
+              },
+              tooltip: 'Open sidebar',
+            ),
+          ),
+        ),
+        title: Text(title),
       ),
       body: Container(
         padding: const EdgeInsets.all(16.0),
