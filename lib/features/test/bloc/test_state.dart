@@ -10,6 +10,8 @@ class TestState extends Equatable {
     this.postTestAnswers = const {},
     this.questions = const [],
     this.currentQuestionID,
+    this.isSubmitted,
+    this.isSubmitting = false,
   });
 
   final Map<int, List<String>> preTestAnswers;
@@ -20,6 +22,8 @@ class TestState extends Equatable {
   final bool postTestCompleted;
   final List<GraphTest> questions;
   final int? currentQuestionID;
+  final bool? isSubmitted;
+  final bool isSubmitting;
 
   @override
   List<Object?> get props => [
@@ -31,6 +35,8 @@ class TestState extends Equatable {
     postTestCompleted,
     questions,
     currentQuestionID,
+    isSubmitted,
+    isSubmitting,
   ];
 
   TestState copyWith({
@@ -42,6 +48,8 @@ class TestState extends Equatable {
     bool? postTestCompleted,
     List<GraphTest>? questions,
     int? currentQuestionID,
+    bool? isSubmitted,
+    bool? isSubmitting,
   }) {
     return TestState(
       preTestAnswers: preTestAnswers ?? this.preTestAnswers,
@@ -52,6 +60,8 @@ class TestState extends Equatable {
       postTestCompleted: postTestCompleted ?? this.postTestCompleted,
       questions: questions ?? this.questions,
       currentQuestionID: currentQuestionID ?? this.currentQuestionID,
+      isSubmitted: isSubmitted ?? this.isSubmitted,
+      isSubmitting: isSubmitting ?? this.isSubmitting,
     );
   }
 }

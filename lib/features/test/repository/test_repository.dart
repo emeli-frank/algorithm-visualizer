@@ -1,4 +1,8 @@
+import 'dart:convert';
+
+import 'package:algorithm_visualizer/exceptions/http_exception.dart';
 import 'package:algorithm_visualizer/features/test/models/graph_test.dart';
+import 'package:http/http.dart' as http;
 
 List<GraphTest> questions = [
   const GraphTest(
@@ -88,7 +92,32 @@ class TestRepository {
     return questions;
   }
 
-  Future<void> submitTest(List<Map<int, List<String>>> answer) async {
-    // Submit test
+  final String baseUrl = 'https://example.com';
+
+  Future<void> submitTest(String participantID, Map<int, List<String>> preTestAnswers, Map<int, List<String>> postTestAnswers) async {
+    final Map<String, Map<int, List<String>>> payload = {
+      'preTestAnswers': preTestAnswers,
+      'postTestAnswers': postTestAnswers,
+    };
+
+    final String jsonPayload = jsonEncode(payload);
+
+    final String url = '$baseUrl/submission/$participantID';
+
+    try {
+      final http.Response response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonPayload,
+      );
+
+      if (response.statusCode != 201)  {
+        throw HttpException('Request failed with status: ${response.statusCode}, ${response.body}');
+      }
+    } catch (e) {
+      throw HttpException('Error occurred while submitting the test: $e');
+    }
   }
 }

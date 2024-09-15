@@ -29,12 +29,6 @@ final class TestAnswerSaved extends TestEvent {
   final bool isPreTest;
 }
 
-final class TestSubmitted extends TestEvent {
-  TestSubmitted(this.answers);
-
-  final List<Map<int, List<String>>> answers;
-}
-
 final class QuestionSelected extends TestEvent {
   QuestionSelected({required this.id});
 
@@ -45,6 +39,14 @@ final class TestStarted extends TestEvent {
   TestStarted({required this.isPreTest});
 
   final bool isPreTest;
+}
+
+final class TestSubmitted extends TestEvent {
+  TestSubmitted({required this.participantID, required this.preTestAnswers, required this.postTestAnswers});
+
+  final String participantID;
+  final Map<int, List<String>> preTestAnswers;
+  final Map<int, List<String>> postTestAnswers;
 }
 
 /*final class TestsLoaded extends TestEvent {
