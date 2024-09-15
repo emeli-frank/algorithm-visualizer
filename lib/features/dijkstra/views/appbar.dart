@@ -107,7 +107,6 @@ class AppBar extends StatelessWidget {
                     final edges = context.read<GraphBloc>().state.edges;
                     final template = GraphTemplateSample(vertices: vertices, edges: edges);
                     final String graphJson = jsonEncode(template.toJson());
-                    print('Serialized Graph: $graphJson');
 
                     String? outputPath = await FilePicker.platform.saveFile(
                       dialogTitle: 'Save Graph as JSON',

@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 
 List<GraphTest> questions = [
   const GraphTest(
-    id: 1,
+    id: '1',
     question: "Considering the graph and the table above, assuming the neighbouring vertex G and I have been evaluated and their distances from the starting vertex has been updated in the table, which vertex will be visited next? (Previously explored vertices are shown in a faint color)",
     imagePath: "assets/images/graph1.png",
     options: [
@@ -17,7 +17,7 @@ List<GraphTest> questions = [
     ],
   ),
   const GraphTest(
-    id: 2,
+    id: '2',
     question: "Which vertices are unvisited neighbouring vertices to the highlighted vertex E? (Select all that apply)",
     imagePath: "assets/images/graph2.png",
     options: [
@@ -30,7 +30,7 @@ List<GraphTest> questions = [
     ],
   ),
   const GraphTest(
-    id: 3,
+    id: '3',
     question: "After visiting vertex E, which of its neighbouring vertices will have their shortest distance updated?",
     imagePath: "assets/images/graph3.png",
     options: [
@@ -41,7 +41,7 @@ List<GraphTest> questions = [
     ],
   ),
   const GraphTest(
-    id: 4,
+    id: '4',
     question: "Using the graph and the table, what is the shortest distance from vertex G to the start vertex A?",
     imagePath: "assets/images/graph4.png",
     options: [
@@ -53,7 +53,7 @@ List<GraphTest> questions = [
     ],
   ),
   const GraphTest(
-    id: 5,
+    id: '5',
     question: "Using the graph and the table, what vertices are along the shortest path from start vertex A to the vertex H?",
     imagePath: "assets/images/graph4.png",
     options: [
@@ -64,7 +64,7 @@ List<GraphTest> questions = [
     ],
   ),
   const GraphTest(
-    id: 6,
+    id: '6',
     question: "Using the graph, what is the shortest distance from vertex G to the start vertex A?",
     imagePath: "assets/images/graph5.png",
     options: [
@@ -75,7 +75,7 @@ List<GraphTest> questions = [
     ],
   ),
   const GraphTest(
-    id: 7,
+    id: '7',
     question: "Using the graph, what vertices are along the shortest path from vertex G to vertex A?",
     imagePath: "assets/images/graph5.png",
     options: [
@@ -94,8 +94,8 @@ class TestRepository {
 
   final String baseUrl = 'https://example.com';
 
-  Future<void> submitTest(String participantID, Map<int, List<String>> preTestAnswers, Map<int, List<String>> postTestAnswers) async {
-    final Map<String, Map<int, List<String>>> payload = {
+  Future<void> submitTest(String participantID, Map<String, List<String>> preTestAnswers, Map<String, List<String>> postTestAnswers) async {
+    final Map<String, Map<String, List<String>>> payload = {
       'preTestAnswers': preTestAnswers,
       'postTestAnswers': postTestAnswers,
     };

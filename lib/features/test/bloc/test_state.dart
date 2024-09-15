@@ -14,14 +14,14 @@ class TestState extends Equatable {
     this.isSubmitting = false,
   });
 
-  final Map<int, List<String>> preTestAnswers;
-  final Map<int, List<String>> postTestAnswers;
+  final Map<String, List<String>> preTestAnswers;
+  final Map<String, List<String>> postTestAnswers;
   final bool preTestStarted;
   final bool preTestCompleted;
   final bool postTestStarted;
   final bool postTestCompleted;
   final List<GraphTest> questions;
-  final int? currentQuestionID;
+  final String? currentQuestionID;
   final bool? isSubmitted;
   final bool isSubmitting;
 
@@ -40,14 +40,14 @@ class TestState extends Equatable {
   ];
 
   TestState copyWith({
-    Map<int, List<String>>? preTestAnswers,
-    Map<int, List<String>>? postTestAnswers,
+    Map<String, List<String>>? preTestAnswers,
+    Map<String, List<String>>? postTestAnswers,
     bool? preTestStarted,
     bool? preTestCompleted,
     bool? postTestStarted,
     bool? postTestCompleted,
     List<GraphTest>? questions,
-    int? currentQuestionID,
+    String? currentQuestionID,
     bool? isSubmitted,
     bool? isSubmitting,
   }) {

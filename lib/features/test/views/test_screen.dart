@@ -139,9 +139,9 @@ class TestControls extends StatelessWidget {
   });
 
   final List<GraphTest> questions;
-  final int selectedQuestionId;
-  final Map<int, List<String>> answers;
-  final Function(int id) onQuestionSelected;
+  final String selectedQuestionId;
+  final Map<String, List<String>> answers;
+  final Function(String id) onQuestionSelected;
   final Function() testCompleted;
 
   @override
@@ -175,10 +175,10 @@ class TestControls extends StatelessWidget {
 class ControlButton extends StatelessWidget {
   const ControlButton({super.key, required this.number, required this.isSelected, required this.isCompleted, required this.onPress});
 
-  final int number;
+  final String number;
   final bool isSelected;
   final bool isCompleted;
-  final Function(int id) onPress;
+  final Function(String id) onPress;
 
   @override
   Widget build(BuildContext context) {

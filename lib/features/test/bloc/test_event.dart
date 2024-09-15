@@ -13,8 +13,8 @@ final class TestCompleted extends TestEvent {
     this.postTestAnswers = const {},
   });
 
-  final Map<int, List<String>> preTestAnswers;
-  final Map<int, List<String>> postTestAnswers;
+  final Map<String, List<String>> preTestAnswers;
+  final Map<String, List<String>> postTestAnswers;
   final bool preTestCompleted;
   final bool postTestCompleted;
 }
@@ -25,14 +25,14 @@ final class TestAnswerSaved extends TestEvent {
   TestAnswerSaved({required this.answers, required this.isPreTest, required this.questionId});
 
   final List<String> answers;
-  final int questionId;
+  final String questionId;
   final bool isPreTest;
 }
 
 final class QuestionSelected extends TestEvent {
   QuestionSelected({required this.id});
 
-  final int id;
+  final String id;
 }
 
 final class TestStarted extends TestEvent {
@@ -45,8 +45,8 @@ final class TestSubmitted extends TestEvent {
   TestSubmitted({required this.participantID, required this.preTestAnswers, required this.postTestAnswers});
 
   final String participantID;
-  final Map<int, List<String>> preTestAnswers;
-  final Map<int, List<String>> postTestAnswers;
+  final Map<String, List<String>> preTestAnswers;
+  final Map<String, List<String>> postTestAnswers;
 }
 
 /*final class TestsLoaded extends TestEvent {

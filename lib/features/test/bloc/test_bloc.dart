@@ -47,10 +47,10 @@ class TestBloc extends Bloc<TestEvent, TestState> {
       }
     });
 
-    on<TestSubmitted>((TestSubmitted event, Emitter<TestState> emit) {
+    on<TestSubmitted>((TestSubmitted event, Emitter<TestState> emit) async {
       emit(state.copyWith(isSubmitting: true));
       try {
-        repo.submitTest(event.participantID, event.preTestAnswers, event.postTestAnswers);
+        await repo.submitTest(event.participantID, event.preTestAnswers, event.postTestAnswers);
         emit(state.copyWith(isSubmitted: true, isSubmitting: false));
       } catch (e) {
         emit(state.copyWith(isSubmitted: false, isSubmitting: false));

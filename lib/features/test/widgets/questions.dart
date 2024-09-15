@@ -11,7 +11,7 @@ class Questions extends StatefulWidget {
 
   final List<String> selectedOptions;
   final GraphTest? currentQuestion;
-  final Function(int id, List<String> answers) onAnswer;
+  final Function(String id, List<String> answers) onAnswer;
 
   @override
   State<Questions> createState() => _QuestionsState();
