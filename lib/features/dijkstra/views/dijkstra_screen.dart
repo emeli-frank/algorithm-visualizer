@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:algorithm_visualizer/constants/graph_templates.dart';
@@ -14,6 +16,8 @@ import 'package:algorithm_visualizer/features/sidebar/cubit/sidebar_cubit.dart';
 import 'package:algorithm_visualizer/utils/extensions/offset_extensions.dart';
 import 'package:algorithm_visualizer/widgets/graph_painter.dart';
 import 'package:algorithm_visualizer/widgets/nav_icon_button.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -350,6 +354,12 @@ class DijkstraCanvas extends StatelessWidget {
                       },
                       onDone: () {
                         context.read<GraphBloc>().add(EdgeSelected(edgeID: null));
+                      },
+                      onRandomValue: () {
+                        var selectedEdge = context.read<GraphBloc>().state.selectedEdge;
+                        if (selectedEdge != null) {
+                          context.read<GraphBloc>().add(EdgeWeightRandomized());
+                        }
                       },
                     ),
                   ),

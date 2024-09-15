@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:algorithm_visualizer/features/dijkstra/models/edge.dart';
@@ -250,6 +251,21 @@ class GraphBloc extends Bloc<GraphEvent, GraphState> {
         ));
       }
     });
+
+    on<EdgeWeightRandomized>((event, emit) {
+      _saveStateForUndo();
+
+      var edgesCopy = [...state.edges];
+      for (var i = 0; i < edgesCopy.length; i++) {
+        edgesCopy[i] = edgesCopy[i].copyWith(weight: _randomWeight());
+      }
+
+      emit(state.copyWith(
+        edges: edgesCopy,
+        canUndo: _undoStack.isNotEmpty,
+        canRedo: _redoStack.isNotEmpty,
+      ));
+    });
   }
 
   _saveStateForUndo({List<Vertex>? vertices}) {
@@ -258,5 +274,9 @@ class GraphBloc extends Bloc<GraphEvent, GraphState> {
 
     // Clear the redo stack because a new action invalidates future states
     _redoStack.clear();
+  }
+
+  int _randomWeight() {
+    return Random().nextInt(10) + 1;
   }
 }

@@ -105,3 +105,5 @@ final class EditModeToggled extends GraphEvent {
 class UndoEvent extends GraphEvent {}
 
 class RedoEvent extends GraphEvent {}
+
+final class EdgeWeightRandomized extends GraphEvent {}

@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 
 class EdgeWeightTextField extends StatefulWidget {
-  const EdgeWeightTextField({super.key, required this.weight, required this.onWeightChanged, required this.onDone});
+  const EdgeWeightTextField({
+    super.key,
+    required this.weight,
+    required this.onWeightChanged,
+    required this.onDone,
+    required this.onRandomValue,
+  });
 
   final int? weight;
   final Function(int) onWeightChanged;
   final Function() onDone;
+  final Function() onRandomValue;
 
   @override
   State<EdgeWeightTextField> createState() => _EdgeWeightTextFieldState();
@@ -63,13 +70,19 @@ class _EdgeWeightTextFieldState extends State<EdgeWeightTextField> {
             ),
           ),
           const SizedBox(width: 8.0),
-          const SizedBox(width: 8.0),
           IconButton(
             onPressed: () {
               widget.onDone();
             },
             icon: const Icon(Icons.close),
             tooltip: 'Close',
+          ),
+          const SizedBox(width: 8.0),
+          TextButton(
+            onPressed: () {
+              widget.onRandomValue();
+            },
+            child: const Text('Random value for all edges'),
           ),
         ],
       ),

@@ -58,25 +58,82 @@ class AppBar extends StatelessWidget {
                 ),
               ),
               Visibility(
-                visible: !context.watch<GraphBloc>().state.isEditing,
+                visible: !context.watch<GraphBloc>().state.isEditing && !kIsWeb,
                 child: TextButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    try {
+                      FilePickerResult? result = await FilePicker.platform.pickFiles(
+                        type: FileType.custom,
+                        allowedExtensions: ['json'],
+                      );
+
+                      if (result == null || result.files.single.path == null) {
+                        // User canceled the picker
+                        return;
+                      }
+
+                      // Get the file path
+                      String filePath = result.files.single.path!;
+                      File file = File(filePath);
+
+                      // Read the file content as a string
+                      String fileContent = await file.readAsString();
+
+                      // Decode the JSON string to a Map or List
+                      Map<String, dynamic> jsonData = jsonDecode(fileContent);
+
+                      final GraphTemplateSample deserializedGraph = GraphTemplateSample.fromJson(jsonData);
+
+                      context.read<GraphBloc>().add(GraphElementReset(vertices: deserializedGraph.vertices, edges: deserializedGraph.edges));
+                    } catch(e) {
+                      print(e);
+                    }
+                  },
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.save_alt_outlined, size: 16.0,),
+                      SizedBox(width: 8),
+                      Text('Import graph'),
+                    ],
+                  ),
+                ),
+              ),
+              Visibility(
+                visible: !context.watch<GraphBloc>().state.isEditing && !kIsWeb,
+                child: TextButton(
+                  onPressed: () async {
                     final vertices = context.read<GraphBloc>().state.vertices;
                     final edges = context.read<GraphBloc>().state.edges;
                     final template = GraphTemplateSample(vertices: vertices, edges: edges);
                     final String graphJson = jsonEncode(template.toJson());
                     print('Serialized Graph: $graphJson');
 
-                    final Map<String, dynamic> graphMap = jsonDecode(graphJson);
-                    final GraphTemplateSample deserializedGraph = GraphTemplateSample.fromJson(graphMap);
-                    print('Deserialized Graph: ${deserializedGraph.vertices}');
+                    String? outputPath = await FilePicker.platform.saveFile(
+                      dialogTitle: 'Save Graph as JSON',
+                      fileName: 'graph.json',
+                    );
+
+                    if (outputPath == null) {
+                      return;
+                    }
+
+                    try {
+                      File file = File(outputPath);
+                      await file.writeAsString(graphJson);
+                    } catch (e) {
+                      /*ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to save the file: $e')),
+                      );*/
+                      print(e);
+                    }
                   },
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.cloud_download_outlined, size: 16.0,),
+                      Icon(Icons.upload_outlined, size: 16.0,),
                       SizedBox(width: 8),
-                      Text('Save graph'),
+                      Text('Export graph'),
                     ],
                   ),
                 ),
