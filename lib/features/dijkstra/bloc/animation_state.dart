@@ -28,6 +28,7 @@ class AnimationState extends Equatable {
     this.startVertex,
     this.tentativeDistanceUpdated,
     this.canUndo = false,
+    this.tempVisitedEdges = const [],
   })  : vertices = vertices ?? [],
         edges = edges ?? [],
         unvisitedVertices = unvisitedVertices ?? Set<Vertex>.from(vertices ?? []);
@@ -46,6 +47,7 @@ class AnimationState extends Equatable {
   final Map<Vertex, Vertex?> previousVertices;
   final Set<Vertex> unvisitedVertices;
   final List<Edge> visitedEdges;
+  final List<Edge> tempVisitedEdges;
   final Vertex? startVertex;
   final bool? tentativeDistanceUpdated;
   final bool canUndo;
@@ -66,6 +68,7 @@ class AnimationState extends Equatable {
     currentNeighbor,
     unvisitedVertices,
     visitedEdges,
+    tempVisitedEdges,
     startVertex,
     tentativeDistanceUpdated,
     canUndo,
@@ -86,6 +89,7 @@ class AnimationState extends Equatable {
     Optional<Vertex?>? currentNeighbor,
     Set<Vertex>? unvisitedVertices,
     List<Edge>? visitedEdges,
+    List<Edge>? tempVisitedEdges,
     Optional<Vertex?>? startVertex,
     Optional<bool>? tentativeDistanceUpdated,
     bool? canUndo,
@@ -105,6 +109,7 @@ class AnimationState extends Equatable {
       currentNeighbor: currentNeighbor == null ? this.currentNeighbor : currentNeighbor.value,
       unvisitedVertices: unvisitedVertices ?? this.unvisitedVertices,
       visitedEdges: visitedEdges ?? this.visitedEdges,
+      tempVisitedEdges: tempVisitedEdges ?? this.tempVisitedEdges,
       startVertex: startVertex == null ? this.startVertex : startVertex.value,
       tentativeDistanceUpdated: tentativeDistanceUpdated == null ? this.tentativeDistanceUpdated : tentativeDistanceUpdated.value,
       canUndo: canUndo ?? this.canUndo,

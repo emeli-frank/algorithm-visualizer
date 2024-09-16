@@ -13,6 +13,8 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
 
   AnimationBloc() : super(AnimationState()) {
     on<AnimationStarted>((AnimationStarted event, Emitter<AnimationState> emit) async {
+      _undoStack.add(state);
+      emit(state.copyWith(canUndo: _undoStack.isNotEmpty));
       _initializeDijkstra(emit, state, event);
     });
 
@@ -31,6 +33,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
         neighbors: [],
         currentNeighbor: const Optional<Vertex?>(null),
         visitedEdges: [],
+        tempVisitedEdges: [],
         startVertex: const Optional<Vertex?>(null),
         unvisitedVertices: {},
         tentativeDistanceUpdated: const Optional<bool>(false),
@@ -51,6 +54,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
         neighbors: [],
         currentNeighbor: const Optional<Vertex?>(null),
         visitedEdges: [],
+        tempVisitedEdges: [],
         startVertex: const Optional<Vertex?>(null),
         unvisitedVertices: {},
         tentativeDistanceUpdated: const Optional<bool>(false),
@@ -71,7 +75,6 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
 
         // Emit the previous state and update undo/redo availability
         emit(previousState.copyWith(canUndo: _undoStack.isNotEmpty));
-
       }
     });
   }
@@ -79,8 +82,6 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
   late List<Vertex> vertices;
   late List<Edge> edges;
   late Vertex currentVertex;
-  // List<Edge>? currVertexEdges;
-  List<Edge> _visitedEdges = [];
 
   void _initializeDijkstra(Emitter<AnimationState> emit, AnimationState state, AnimationStarted event) {
     vertices = event.vertices;
@@ -128,6 +129,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     final updatedUnvisitedVertices = {...state.unvisitedVertices};
     updatedUnvisitedVertices.remove(currentVertex);
 
+    print('*** setting current vertex with id: ${currentVertex.id}');
     emit(state.copyWith(
       currentEdge: const Optional<Edge?>(null), // clear previous if existing
       currVertexEdges: [], // clear previous if existing
@@ -135,11 +137,10 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
       neighbors: [],
       unvisitedVertices: updatedUnvisitedVertices,
       currentNeighbor: const Optional<Vertex?>(null),
-      visitedEdges: [...state.visitedEdges, ..._visitedEdges],
+      visitedEdges: [...state.visitedEdges, ...state.tempVisitedEdges],
+      tempVisitedEdges: [],
       step: const Optional<AnimationStep>(AnimationStep.findingCurrentEdges),
     ));
-
-    _visitedEdges = [];
   }
 
   void _findCurrentEdges(Emitter<AnimationState> emit) {
@@ -151,7 +152,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
             (state.unvisitedVertices.contains(edge.startVertex) &&
                 edge.endVertex == currentVertex))
         .toList();
-    _visitedEdges.addAll(currVertexEdges);
+    final tempVisitedEdges = [...state.tempVisitedEdges, ...currVertexEdges];
 
     List<Vertex> neighbors = [];
     for (var edge in currVertexEdges) {
@@ -165,6 +166,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     emit(state.copyWith(
         currVertexEdges: currVertexEdges,
         neighbors: neighbors,
+        tempVisitedEdges: tempVisitedEdges,
         step: const Optional<AnimationStep>(AnimationStep.findingCurrentEdge),
     ));
   }
@@ -260,5 +262,12 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
   _saveStateForUndo({List<Vertex>? vertices}) {
     // Save the current state to the undo stack before modifying it
     _undoStack.add(state.copyWith(vertices: vertices));
+  }
+
+  @override
+  onTransition(Transition<AnimationEvent, AnimationState> transition) {
+    print('>>>>>>>>>>>>>>>>>>>>>>> ${transition.event} >>>>>>>>>>>>>>>>> ${transition.currentState.currentVertex}');
+    print('**************************************** ${_undoStack.firstOrNull}');
+    super.onTransition(transition);
   }
 }
