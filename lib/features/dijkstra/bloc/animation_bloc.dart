@@ -11,6 +11,9 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
   // Stack of previous states
   List<AnimationState> _undoStack = [];
 
+  late List<Vertex> vertices;
+  late List<Edge> edges;
+
   AnimationBloc() : super(AnimationState()) {
     on<AnimationStarted>((AnimationStarted event, Emitter<AnimationState> emit) async {
       _undoStack.add(state);
@@ -79,14 +82,10 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     });
   }
 
-  late List<Vertex> vertices;
-  late List<Edge> edges;
-  late Vertex currentVertex;
-
   void _initializeDijkstra(Emitter<AnimationState> emit, AnimationState state, AnimationStarted event) {
     vertices = event.vertices;
     edges = event.edges;
-    currentVertex = event.startVertex;
+    // currentVertex = event.startVertex;
     final unvisitedVertices = Set<Vertex>.from(vertices);
 
     final Map<Vertex, double> distances = {};
@@ -103,13 +102,14 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
       isRunning: true,
       isComplete: false,
       step: const Optional<AnimationStep>(AnimationStep.initStartVertex),
-      startVertex: Optional<Vertex>(currentVertex),
+      startVertex: Optional<Vertex>(event.startVertex),
+      tempCurrentVertex: event.startVertex,
     ));
   }
 
   void _initializeStartDistance(Emitter<AnimationState> emit, AnimationState state) {
     var distances = state.distances;
-    distances[currentVertex] = 0;
+    distances[state.tempCurrentVertex!] = 0;
 
     emit(state.copyWith(
       distances: distances,
@@ -121,7 +121,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
   void _findCurrentVertex(AnimationState state, Emitter<AnimationState> emit) {
     // Find the unvisited vertex with the smallest distance
     final distances = {...state.distances};
-    currentVertex = state.unvisitedVertices.reduce((a, b) {
+    final currentVertex = state.unvisitedVertices.reduce((a, b) {
       return distances[a]! < distances[b]! ? a : b;
     });
 
@@ -129,7 +129,6 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     final updatedUnvisitedVertices = {...state.unvisitedVertices};
     updatedUnvisitedVertices.remove(currentVertex);
 
-    print('*** setting current vertex with id: ${currentVertex.id}');
     emit(state.copyWith(
       currentEdge: const Optional<Edge?>(null), // clear previous if existing
       currVertexEdges: [], // clear previous if existing
@@ -148,15 +147,15 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     final currVertexEdges = edges
         .where((edge) =>
             (state.unvisitedVertices.contains(edge.endVertex) &&
-                edge.startVertex == currentVertex) ||
+                edge.startVertex == state.currentVertex) ||
             (state.unvisitedVertices.contains(edge.startVertex) &&
-                edge.endVertex == currentVertex))
+                edge.endVertex == state.currentVertex))
         .toList();
     final tempVisitedEdges = [...state.tempVisitedEdges, ...currVertexEdges];
 
     List<Vertex> neighbors = [];
     for (var edge in currVertexEdges) {
-      if (edge.startVertex == currentVertex) {
+      if (edge.startVertex == state.currentVertex) {
         neighbors.add(edge.endVertex);
       } else {
         neighbors.add(edge.startVertex);
@@ -186,7 +185,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     }
 
     final currentEdge = state.currVertexEdges.removeAt(0);
-    final neighbor = currentEdge.startVertex == currentVertex
+    final neighbor = currentEdge.startVertex == state.currentVertex
         ? currentEdge.endVertex
         : currentEdge.startVertex;
 
@@ -207,14 +206,14 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
 
     final distances = {...state.distances};
     final previousVertices = {...state.previousVertices};
-    final newDist = distances[currentVertex]! + state.currentEdge!.weight;
+    final newDist = distances[state.currentVertex]! + state.currentEdge!.weight;
 
     var tentativeDistanceUpdated = false;
 
     // If the new distance is shorter, update the distance and previous vertex of the neighbor
     if (newDist < distances[neighbor]!) {
       distances[neighbor] = newDist;
-      previousVertices[neighbor] = currentVertex;
+      previousVertices[neighbor] = state.currentVertex;
       tentativeDistanceUpdated = true;
     }
 
@@ -257,17 +256,5 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
       case AnimationStep.complete:
         break;
     }
-  }
-
-  _saveStateForUndo({List<Vertex>? vertices}) {
-    // Save the current state to the undo stack before modifying it
-    _undoStack.add(state.copyWith(vertices: vertices));
-  }
-
-  @override
-  onTransition(Transition<AnimationEvent, AnimationState> transition) {
-    print('>>>>>>>>>>>>>>>>>>>>>>> ${transition.event} >>>>>>>>>>>>>>>>> ${transition.currentState.currentVertex}');
-    print('**************************************** ${_undoStack.firstOrNull}');
-    super.onTransition(transition);
   }
 }
