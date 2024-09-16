@@ -23,6 +23,8 @@ final class AnimationEnded extends AnimationEvent {}
 
 final class AnimationReset extends AnimationEvent {}
 
+class AnimationUndoEvent extends AnimationEvent {}
+
 /*final class StartVertexSelected extends AnimationEvent {
   StartVertexSelected({required this.vertex});
 

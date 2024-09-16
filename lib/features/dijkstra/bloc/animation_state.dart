@@ -27,6 +27,7 @@ class AnimationState extends Equatable {
     this.visitedEdges = const [],
     this.startVertex,
     this.tentativeDistanceUpdated,
+    this.canUndo = false,
   })  : vertices = vertices ?? [],
         edges = edges ?? [],
         unvisitedVertices = unvisitedVertices ?? Set<Vertex>.from(vertices ?? []);
@@ -47,6 +48,7 @@ class AnimationState extends Equatable {
   final List<Edge> visitedEdges;
   final Vertex? startVertex;
   final bool? tentativeDistanceUpdated;
+  final bool canUndo;
 
   @override
   List<Object?> get props => [
@@ -66,6 +68,7 @@ class AnimationState extends Equatable {
     visitedEdges,
     startVertex,
     tentativeDistanceUpdated,
+    canUndo,
   ];
 
   AnimationState copyWith({
@@ -85,6 +88,7 @@ class AnimationState extends Equatable {
     List<Edge>? visitedEdges,
     Optional<Vertex?>? startVertex,
     Optional<bool>? tentativeDistanceUpdated,
+    bool? canUndo,
   }) {
     return AnimationState(
       vertices: vertices ?? this.vertices,
@@ -103,6 +107,7 @@ class AnimationState extends Equatable {
       visitedEdges: visitedEdges ?? this.visitedEdges,
       startVertex: startVertex == null ? this.startVertex : startVertex.value,
       tentativeDistanceUpdated: tentativeDistanceUpdated == null ? this.tentativeDistanceUpdated : tentativeDistanceUpdated.value,
+      canUndo: canUndo ?? this.canUndo,
     );
   }
 }

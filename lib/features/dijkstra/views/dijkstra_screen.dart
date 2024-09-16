@@ -439,12 +439,18 @@ class DijkstraCanvas extends StatelessWidget {
                                 width: 20.0,
                                 child: VerticalDivider(width: 1, color: Colors.black12),
                               ),
+                              IconButton(
+                                onPressed: !context.watch<AnimationBloc>().state.canUndo ? null : () {
+                                  context.read<AnimationBloc>().add(AnimationUndoEvent());
+                                },
+                                icon: const Icon(Icons.skip_previous_outlined),
+                              ),
                               const IconButton(
                                 onPressed: null,
                                 icon: Icon(Icons.play_arrow_outlined),
                               ),
                               IconButton(
-                                onPressed: context.watch<AnimationBloc>().state.isComplete ? null : () {
+                                onPressed: context.watch<AnimationBloc>().state.isComplete || context.watch<AnimationBloc>().state.startVertex == null ? null : () {
                                   context.read<AnimationBloc>().add(AnimationNextStep());
                                 },
                                 icon: const Icon(Icons.skip_next_outlined),

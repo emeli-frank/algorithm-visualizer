@@ -8,12 +8,16 @@ part 'animation_state.dart';
 part 'animation_event.dart';
 
 class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
+  // Stack of previous states
+  List<AnimationState> _undoStack = [];
+
   AnimationBloc() : super(AnimationState()) {
     on<AnimationStarted>((AnimationStarted event, Emitter<AnimationState> emit) async {
       _initializeDijkstra(emit, state, event);
     });
 
     on<AnimationEnded>((AnimationEnded event, Emitter<AnimationState> emit) async {
+      _undoStack = [];
       emit(state.copyWith(
         isRunning: false,
         isComplete: true,
@@ -54,18 +58,28 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     });
 
     on<AnimationNextStep>((event, emit) {
+      _undoStack.add(state);
+      emit(state.copyWith(canUndo: _undoStack.isNotEmpty));
       _processNextStep(event, emit, state);
     });
 
-    /*on<StartVertexSelected>((event, emit) {
-      emit(state.copyWith(startVertex: Optional<Vertex>(event.vertex)));
-    });*/
+    // Undo event handler
+    on<AnimationUndoEvent>((event, emit) {
+      if (_undoStack.isNotEmpty) {
+        // Pop from the undo stack and emit the previous state
+        final previousState = _undoStack.removeLast();
+
+        // Emit the previous state and update undo/redo availability
+        emit(previousState.copyWith(canUndo: _undoStack.isNotEmpty));
+
+      }
+    });
   }
 
   late List<Vertex> vertices;
   late List<Edge> edges;
   late Vertex currentVertex;
-  List<Edge>? currVertexEdges;
+  // List<Edge>? currVertexEdges;
   List<Edge> _visitedEdges = [];
 
   void _initializeDijkstra(Emitter<AnimationState> emit, AnimationState state, AnimationStarted event) {
@@ -130,17 +144,17 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
 
   void _findCurrentEdges(Emitter<AnimationState> emit) {
     // Get all the edges starting from the current vertex
-    currVertexEdges = edges
+    final currVertexEdges = edges
         .where((edge) =>
             (state.unvisitedVertices.contains(edge.endVertex) &&
                 edge.startVertex == currentVertex) ||
             (state.unvisitedVertices.contains(edge.startVertex) &&
                 edge.endVertex == currentVertex))
         .toList();
-    _visitedEdges.addAll(currVertexEdges ?? []);
+    _visitedEdges.addAll(currVertexEdges);
 
     List<Vertex> neighbors = [];
-    for (var edge in currVertexEdges!) {
+    for (var edge in currVertexEdges) {
       if (edge.startVertex == currentVertex) {
         neighbors.add(edge.endVertex);
       } else {
@@ -158,8 +172,8 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
   void _findCurrentEdge(AnimationState state, Emitter<AnimationState> emit) {
     // If dealing with the last edge, set next step to AnimationStep.processingNextStep
     // so that this function is exited in the next iteration
-    if (currVertexEdges!.length <= 1) {
-      if (currVertexEdges!.isEmpty) {
+    if (state.currVertexEdges.length <= 1) {
+      if (state.currVertexEdges.isEmpty) {
         emit(state.copyWith(
           currentEdge: const Optional(null),
           step: const Optional<AnimationStep>(AnimationStep.findingCurrentVertex),
@@ -169,7 +183,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
       }
     }
 
-    final currentEdge = currVertexEdges!.removeAt(0);
+    final currentEdge = state.currVertexEdges.removeAt(0);
     final neighbor = currentEdge.startVertex == currentVertex
         ? currentEdge.endVertex
         : currentEdge.startVertex;
@@ -241,5 +255,10 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
       case AnimationStep.complete:
         break;
     }
+  }
+
+  _saveStateForUndo({List<Vertex>? vertices}) {
+    // Save the current state to the undo stack before modifying it
+    _undoStack.add(state.copyWith(vertices: vertices));
   }
 }
