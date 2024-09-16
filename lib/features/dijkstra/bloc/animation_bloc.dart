@@ -28,6 +28,8 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
         currentNeighbor: const Optional<Vertex?>(null),
         visitedEdges: [],
         startVertex: const Optional<Vertex?>(null),
+        unvisitedVertices: {},
+        tentativeDistanceUpdated: const Optional<bool>(false),
       ));
     });
 
@@ -45,6 +47,9 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
         neighbors: [],
         currentNeighbor: const Optional<Vertex?>(null),
         visitedEdges: [],
+        startVertex: const Optional<Vertex?>(null),
+        unvisitedVertices: {},
+        tentativeDistanceUpdated: const Optional<bool>(false),
       ));
     });
 

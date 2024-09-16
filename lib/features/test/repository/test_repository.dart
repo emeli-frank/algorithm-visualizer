@@ -95,14 +95,15 @@ class TestRepository {
   final String baseUrl = 'https://2316808.linux.studentwebserver.co.uk';
 
   Future<void> submitTest(String participantID, Map<String, List<String>> preTestAnswers, Map<String, List<String>> postTestAnswers) async {
-    final Map<String, Map<String, List<String>>> payload = {
+    final Map<String, dynamic> payload = {
+      'participant_id': participantID,
       'pre_test_answers': preTestAnswers,
       'post_test_answers': postTestAnswers,
     };
 
     final String jsonPayload = jsonEncode(payload);
 
-    final String url = '$baseUrl/algorithm_visualization/submission.php?participant_id=$participantID';
+    final String url = '$baseUrl/algorithm_visualization/submission.php';
 
     try {
       final http.Response response = await http.post(
