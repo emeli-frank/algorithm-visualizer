@@ -67,7 +67,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     on<AnimationNextStep>((event, emit) {
       _undoStack.add(state);
       emit(state.copyWith(canUndo: _undoStack.isNotEmpty));
-      _processNextStep(event, emit, state);
+      _processNextStep(emit, state);
     });
 
     // Undo event handler
@@ -227,7 +227,7 @@ class AnimationBloc extends Bloc<AnimationEvent, AnimationState> {
     ));
   }
 
-  void _processNextStep(AnimationNextStep event, Emitter<AnimationState> emit, AnimationState state) {
+  void _processNextStep(Emitter<AnimationState> emit, AnimationState state) {
     if (state.unvisitedVertices.isEmpty) {
       emit(state.copyWith(
         isComplete: true,

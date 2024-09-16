@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -408,55 +409,7 @@ class DijkstraCanvas extends StatelessWidget {
                           const VisualizationInfo(),
 
                           // Animation controls
-                          Row(
-                            children: [
-                              Visibility(
-                                visible: !context.watch<AnimationBloc>().state.isRunning,
-                                child: TextButton(
-                                  onPressed: context.read<GraphBloc>().state.selectedVertexID == null ? null : () {
-                                    context.read<GraphBloc>().add(VertexSelected(vertexID: null));
-                                    context.read<AnimationBloc>().add(AnimationStarted(
-                                      startVertex: context.read<GraphBloc>().state.vertices
-                                          .firstWhere((v) => v.id == context.read<GraphBloc>().state.selectedVertexID),
-                                      vertices: context.read<GraphBloc>().state.vertices,
-                                      edges: context.read<GraphBloc>().state.edges,
-                                    ));
-                                  },
-                                  child: const Text('Start'),
-                                ),
-                              ),
-                              Visibility(
-                                visible: context.watch<AnimationBloc>().state.isRunning,
-                                child: TextButton(
-                                  onPressed: () {
-                                    context.read<AnimationBloc>().add(AnimationEnded());
-                                  },
-                                  child: const Text('End'),
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 18.0,
-                                width: 20.0,
-                                child: VerticalDivider(width: 1, color: Colors.black12),
-                              ),
-                              IconButton(
-                                onPressed: !context.watch<AnimationBloc>().state.canUndo ? null : () {
-                                  context.read<AnimationBloc>().add(AnimationUndoEvent());
-                                },
-                                icon: const Icon(Icons.skip_previous_outlined),
-                              ),
-                              const IconButton(
-                                onPressed: null,
-                                icon: Icon(Icons.play_arrow_outlined),
-                              ),
-                              IconButton(
-                                onPressed: context.watch<AnimationBloc>().state.isComplete || context.watch<AnimationBloc>().state.startVertex == null ? null : () {
-                                  context.read<AnimationBloc>().add(AnimationNextStep());
-                                },
-                                icon: const Icon(Icons.skip_next_outlined),
-                              ),
-                            ],
-                          ),
+                          AnimationControls(),
                         ],
                       ),
                     ),
@@ -467,6 +420,105 @@ class DijkstraCanvas extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class AnimationControls extends StatefulWidget {
+  const AnimationControls({
+    super.key,
+  });
+
+  @override
+  State<AnimationControls> createState() => _AnimationControlsState();
+}
+
+class _AnimationControlsState extends State<AnimationControls> {
+  Timer? _timer;
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  _play() {
+    setState(() {
+      _timer?.cancel();
+      _timer = Timer.periodic(const Duration(seconds: 2), (timer) {
+        context.read<AnimationBloc>().add(AnimationNextStep());
+      });
+    });
+  }
+
+  _pause() {
+    setState(() {
+      _timer?.cancel();
+      _timer = null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    bool cantMoveForward = context.watch<AnimationBloc>().state.isComplete || context.watch<AnimationBloc>().state.startVertex == null;
+    void Function()? onPlayPauseHandler;
+
+    if (!cantMoveForward) {
+      if (_timer != null) {
+        onPlayPauseHandler = _pause;
+      } else {
+        onPlayPauseHandler = _play;
+      }
+    }
+
+    return Row(
+      children: [
+        Visibility(
+          visible: !context.watch<AnimationBloc>().state.isRunning,
+          child: TextButton(
+            onPressed: context.read<GraphBloc>().state.selectedVertexID == null ? null : () {
+              context.read<GraphBloc>().add(VertexSelected(vertexID: null));
+              context.read<AnimationBloc>().add(AnimationStarted(
+                startVertex: context.read<GraphBloc>().state.vertices
+                    .firstWhere((v) => v.id == context.read<GraphBloc>().state.selectedVertexID),
+                vertices: context.read<GraphBloc>().state.vertices,
+                edges: context.read<GraphBloc>().state.edges,
+              ));
+            },
+            child: const Text('Start'),
+          ),
+        ),
+        Visibility(
+          visible: context.watch<AnimationBloc>().state.isRunning,
+          child: TextButton(
+            onPressed: () {
+              context.read<AnimationBloc>().add(AnimationEnded());
+            },
+            child: const Text('End'),
+          ),
+        ),
+        const SizedBox(
+          height: 18.0,
+          width: 20.0,
+          child: VerticalDivider(width: 1, color: Colors.black12),
+        ),
+        IconButton(
+          onPressed: !context.watch<AnimationBloc>().state.canUndo ? null : () {
+            context.read<AnimationBloc>().add(AnimationUndoEvent());
+          },
+          icon: const Icon(Icons.skip_previous_outlined),
+        ),
+        IconButton(
+          onPressed: onPlayPauseHandler,
+          icon: Icon(_timer != null ? Icons.pause_outlined : Icons.play_arrow_outlined),
+        ),
+        IconButton(
+          onPressed: cantMoveForward ? null : () {
+            context.read<AnimationBloc>().add(AnimationNextStep());
+          },
+          icon: const Icon(Icons.skip_next_outlined),
+        ),
+      ],
     );
   }
 }
