@@ -23,6 +23,7 @@ class VisualizationInfo extends StatelessWidget {
     final currentEdge = animationState.currentEdge;
     var neighbors = animationState.neighbors;
     var isTentativeDistanceUpdated = animationState.tentativeDistanceUpdated ?? false;
+    final unvisitedVertices = animationState.unvisitedVertices;
 
     Widget instruction = Container();
 
@@ -59,11 +60,11 @@ class VisualizationInfo extends StatelessWidget {
     } else if (currentVertex != null) {
 
       // New vertex to visit
-      instruction = Messages.getNewVisitedVertexMessage(currentVertex, startVertex!);
+      instruction = Messages.getNewVisitedVertexMessage(currentVertex, startVertex!, unvisitedVertices.isEmpty);
     } else if (animationState.isComplete) {
 
         // Algorithm has completed
-        instruction = const Text('The algorithm has completed. The table now displays the shortest distance from the starting vertex to each vertex, as well as the preceding vertex in the shortest path. Click the "End" button to finish.');
+        instruction = const Text('The algorithm has completed. The table now displays the shortest distance from the starting vertex to every other vertex, as well as the preceding vertex in the shortest path. By following the path from the starting vertex to any other vertex, you can determine the shortest path between them and the total distance of that path from the start vertex. Click the "End" button to finish.');
     }
 
     return Padding(
@@ -83,7 +84,14 @@ class Messages {
        ),
        children: [
          const TextSpan(
-           text: 'A table showing the distances from the start vertex to each vertex has been created. Currently, the distances from the starting vertex ',
+           text: 'Dijkstra\'s algorithm is used to find the shortest path from a starting vertex (in this case, vertex ',
+         ),
+         WidgetSpan(
+           alignment: PlaceholderAlignment.middle,
+           child: VertexTextLabel(label: startVertex.label),
+         ),
+         const TextSpan(
+           text: ') to all other vertices in a graph. The algorithm works by exploring the graph, step by step, updating the shortest known distance to each vertex, and ensuring that we always expand the vertex with the smallest distance next. A table showing the distances from the start vertex to every other vertex has been created. Currently, the distances from the starting vertex ',
          ),
          WidgetSpan(
            alignment: PlaceholderAlignment.middle,
@@ -97,14 +105,37 @@ class Messages {
            child: VertexTextLabel(label: startVertex.label),
          ),
          const TextSpan(
-           text: ' is the starting vertex, its distance is set to 0. On the table, the "Shortest distance" column displays the current distance from the starting vertex to each vertex, and the "Previous vertex" column indicates the vertex that precedes each one in the shortest path.',
+           text: ' is the starting vertex, its distance is set to 0. On the table, the "Shortest distance" column displays the current distance from the starting vertex to every other vertex, and the "Previous vertex" column indicates the vertex that precedes each one in the shortest path.',
          ),
        ],
      ),
    );
   }
 
-  static Widget getNewVisitedVertexMessage(Vertex currentVertex, Vertex startVertex) {
+  static Widget getNewVisitedVertexMessage(Vertex currentVertex, Vertex startVertex, bool isLastVertex) {
+    if (isLastVertex) {
+      return RichText(
+        text: TextSpan(
+          style: const TextStyle(
+            height: 1.5,
+            color: Colors.black,
+          ),
+          children: [
+            const TextSpan(
+              text: 'The vertex ',
+            ),
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: VertexTextLabel(label: currentVertex.label, color: Colors.green.shade300,),
+            ),
+            const TextSpan(
+              text: ' is the last unvisited vertex so we mark it as visited as nothing more needs to be done.',
+            ),
+          ],
+        ),
+      );
+    }
+
     return RichText(
       text: TextSpan(
         style: const TextStyle(
@@ -120,7 +151,7 @@ class Messages {
             child: VertexTextLabel(label: currentVertex.label, color: Colors.green.shade300,),
           ),
           const TextSpan(
-            text: ' is selected as it is the unvisited vertex with the smallest known distance from ',
+            text: ' is now being visited because it is the unvisited vertex with the smallest known distance from ',
           ),
           WidgetSpan(
             alignment: PlaceholderAlignment.middle,
@@ -297,21 +328,21 @@ class Messages {
             ),
             children: [
               const TextSpan(
-                text: 'The new tentative distance is the sum of the current total distance of vertex ',
+                text: 'The new tentative distance is the sum of the shortest distance of vertex ',
               ),
               WidgetSpan(
                 alignment: PlaceholderAlignment.middle,
                 child: VertexTextLabel(label: currentVertex.label, color: Colors.green.shade300,),
               ),
               const TextSpan(
-                text: ' which is ',
+                text: ' from the start vertex which is ',
               ),
               WidgetSpan(
                 alignment: PlaceholderAlignment.middle,
                 child: Text(distances[currentVertex]!.toStringAsFixed(0)),
               ),
               const TextSpan(
-                text: ', and the weight of the edge to vertex ',
+                text: ', and the weight of the edge connecting it to vertex ',
               ),
               WidgetSpan(
                 alignment: PlaceholderAlignment.middle,
@@ -329,7 +360,7 @@ class Messages {
               ),
               WidgetSpan(
                 alignment: PlaceholderAlignment.middle,
-                child: Text(tentativeDistance.toStringAsFixed(0)),
+                child: Text('${tentativeDistance.toStringAsFixed(0)} (${distances[currentVertex]!.toStringAsFixed(0)} + ${currentEdge.weight.toStringAsFixed(0)} = ${tentativeDistance.toStringAsFixed(0)})'),
               ),
               const TextSpan(
                 text: '.',

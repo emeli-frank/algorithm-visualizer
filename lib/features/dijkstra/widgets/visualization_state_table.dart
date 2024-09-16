@@ -31,6 +31,7 @@ class VisualizationStateTable extends StatelessWidget {
     var previousVertices = context.watch<AnimationBloc>().state.previousVertices;
     final unVisitedVertices = context.watch<AnimationBloc>().state.unvisitedVertices;
     final currentNeighbor = context.watch<AnimationBloc>().state.currentNeighbor;
+    final isComplete = context.watch<AnimationBloc>().state.isComplete;
 
     List<Widget> rows = [];
 
@@ -38,27 +39,23 @@ class VisualizationStateTable extends StatelessWidget {
       var distance = distances.values.toList()[i];
       var previous = previousVertices.values.toList()[i];
       var vertex = distances.keys.toList()[i];
-      Color textColor;
+      Color textColor = Colors.black;
       Color bgColor = Colors.transparent;
 
-      if (!unVisitedVertices.contains(vertex) && vertex != currentVertex) {
+      if (!unVisitedVertices.contains(vertex) && vertex != currentVertex && !isComplete) {
 
         // Visited vertex
         textColor = Colors.black12;
-      } else if (currentVertex != null && currentVertex.id == vertex.id) {
+      } else if (currentVertex != null && currentVertex.id == vertex.id && !isComplete) {
 
         // Current vertex
         textColor = Colors.green;
         bgColor = textColor.withOpacity(0.1);
-      } else if (currentNeighbor != null && currentNeighbor.id == vertex.id) {
+      } else if (currentNeighbor != null && currentNeighbor.id == vertex.id && !isComplete) {
 
         // Current neighbor being evaluated
         textColor = Colors.yellow.shade700;
         bgColor = textColor.withOpacity(0.05);
-      } else {
-
-        // Default
-        textColor = Colors.black;
       }
 
       rows.add(
