@@ -158,7 +158,25 @@ class TestControls extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        TextButton(
+          onPressed: selectedQuestionId != questions.first.id ? () {
+            final index = questions.indexWhere((element) => element.id == selectedQuestionId);
+            if (index > 0) {
+              onQuestionSelected(questions[index - 1].id);
+            }
+          } : null,
+          child: const Text('Previous'),
+        ),
         ...buttons,
+        TextButton(
+          onPressed: selectedQuestionId != questions.last.id ? () {
+            final index = questions.indexWhere((element) => element.id == selectedQuestionId);
+            if (index < questions.length - 1) {
+              onQuestionSelected(questions[index + 1].id);
+            }
+          } : null,
+          child: const Text('Next'),
+        ),
         TextButton(
           onPressed: _canFinish() ? testCompleted : null,
           child: const Text('Finish'),
@@ -184,7 +202,7 @@ class ControlButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: isSelected ? Theme.of(context).colorScheme.secondaryContainer : Colors.transparent,
+        color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
         borderRadius: BorderRadius.circular(4.0),
       ),
       child: InkWell(
@@ -194,17 +212,21 @@ class ControlButton extends StatelessWidget {
             children: [
               Visibility(
                 visible: isCompleted,
-                child: Icon(
-                  Icons.check_circle,
-                  size: 12.0,
-                  color: Colors.green,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.check_circle,
+                      size: 12.0,
+                      color: isSelected ? Colors.white : Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8.0),
+                  ],
                 ),
               ),
-              const SizedBox(width: 8.0),
               Text(
                 number.toString(),
                 style: TextStyle(
-                  color: isSelected ? Theme.of(context).colorScheme.primary : Colors.black26,
+                  color: isSelected ? Theme.of(context).colorScheme.surface : Theme.of(context).colorScheme.primary,
                 ),
               ),
             ],

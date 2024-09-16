@@ -189,7 +189,7 @@ class AppBar extends StatelessWidget {
                       },
                       iconData: Icons.pan_tool_outlined,
                       isActive: cubit.state.selection == DijkstraTools.pan,
-                      tooltip: 'Move',
+                      tooltip: 'Move tool: This allows you to drag vertices around, and select edges to change their weights.',
                     ),
                     NavIconButton(
                       onPressed: () {
@@ -197,7 +197,7 @@ class AppBar extends StatelessWidget {
                       },
                       iconData: Icons.spoke_outlined,
                       isActive: cubit.state.selection == DijkstraTools.vertices,
-                      tooltip: 'Add Vertex',
+                      tooltip: 'Vertex creation tool: Click on the canvas to create a new vertex.',
                     ),
                     NavIconButton(
                       onPressed: () {
@@ -205,7 +205,7 @@ class AppBar extends StatelessWidget {
                       },
                       iconData: Icons.linear_scale_outlined,
                       isActive: cubit.state.selection == DijkstraTools.edge,
-                      tooltip: 'Add Edge',
+                      tooltip: 'Edge creation tool: Draw a line between two vertices to create an edge.',
                     ),
                     const SizedBox(
                       height: 18.0,
