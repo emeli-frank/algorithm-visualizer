@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:algorithm_visualizer/features/test/bloc/test_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -20,6 +21,8 @@ class _TestCompletionState extends State<TestCompletion> {
 
   @override
   Widget build(BuildContext context) {
+    bool? isSubmitted = context.watch<TestBloc>().state.isSubmitted;
+
     Widget child = Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -71,16 +74,24 @@ class _TestCompletionState extends State<TestCompletion> {
           ),
           const SizedBox(height: 16.0),
           TextButton(
-            onPressed: _participantID.isEmpty || context.watch<TestBloc>().state.isSubmitting ? null : () {
-              final preTestAnswers = context.read<TestBloc>().state.preTestAnswers;
-              final postTestAnswers = context.read<TestBloc>().state.postTestAnswers;
-              context.read<TestBloc>().add(TestSubmitted(
-                participantID: _participantID,
-                preTestAnswers: preTestAnswers,
-                postTestAnswers: postTestAnswers,
-              ));
-            },
-            child: const Text('Submit responses'),
+            onPressed: _participantID.isEmpty ||
+                    context.watch<TestBloc>().state.isSubmitting ||
+                    (isSubmitted != null && isSubmitted == true)
+                ? null
+                : () {
+                    final preTestAnswers =
+                        context.read<TestBloc>().state.preTestAnswers;
+                    final postTestAnswers =
+                        context.read<TestBloc>().state.postTestAnswers;
+                    context.read<TestBloc>().add(TestSubmitted(
+                          participantID: _participantID,
+                          preTestAnswers: preTestAnswers,
+                          postTestAnswers: postTestAnswers,
+                        ));
+                  },
+            child: isSubmitted != null && isSubmitted == true
+                ? const Text('Submitted')
+                : const Text('Submit responses'),
           ),
           const SizedBox(height: 8.0),
           if (context.watch<TestBloc>().state.isSubmitting)
@@ -99,12 +110,12 @@ class _TestCompletionState extends State<TestCompletion> {
               ],
             ),
           const SizedBox(height: 8.0),
-          if (context.watch<TestBloc>().state.isSubmitted ?? false)
+          if (isSubmitted != null && isSubmitted == true)
             const Text(
               'Responses submitted successfully!',
               style: TextStyle(color: Colors.green),
             ),
-          if (context.watch<TestBloc>().state.isSubmitted == false)
+          if (isSubmitted != null && isSubmitted == false)
             const Text(
               'Failed to submit responses. Please try again.',
               style: TextStyle(color: Colors.red),
@@ -126,9 +137,9 @@ class _TestCompletionState extends State<TestCompletion> {
                 final preTestAnswers = context.read<TestBloc>().state.preTestAnswers;
                 final postTestAnswers = context.read<TestBloc>().state.postTestAnswers;
                 final response = {
-                  'participantID': _participantID,
-                  'preTestAnswers': preTestAnswers,
-                  'postTestAnswers': postTestAnswers,
+                  'participant_id': _participantID,
+                  'pre_test_answers': preTestAnswers,
+                  'post_test_answers': postTestAnswers,
                 };
 
                 setState(() {
@@ -138,21 +149,33 @@ class _TestCompletionState extends State<TestCompletion> {
               child: const Text('Show response'),
             ),
           if (_responseJson.isNotEmpty)
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8.0),
-                border: Border.all(color: Colors.grey[300]!),
-                color: Colors.grey[200],
-              ),
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                _responseJson,
-                style: const TextStyle(
-                  fontSize: 12.0,
-                  color: Colors.grey,
+            Column(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8.0),
+                    border: Border.all(color: Colors.grey[300]!),
+                    color: Colors.grey[200],
+                  ),
+                  padding: const EdgeInsets.all(16.0),
+                  child: SelectableText(
+                    _responseJson,
+                    style: const TextStyle(
+                      fontSize: 12.0,
+                      color: Colors.grey,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 8.0),
+                TextButton(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: _responseJson));
+                  },
+                  child: const Text('Copy to clipboard'),
+                ),
+              ],
             ),
+
         ],
       );
     }

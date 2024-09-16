@@ -54,6 +54,7 @@ class TestBloc extends Bloc<TestEvent, TestState> {
         emit(state.copyWith(isSubmitted: true, isSubmitting: false));
       } catch (e) {
         emit(state.copyWith(isSubmitted: false, isSubmitting: false));
+        print(e);
       }
     });
   }
