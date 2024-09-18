@@ -255,11 +255,6 @@ class AppBar extends StatelessWidget {
                   ],
                 ),
               ),
-              NavIconButton(
-                onPressed: () {},
-                iconData: Icons.info_outline,
-                tooltip: 'Algorithm Info',
-              ),
             ],
           ),
         ],
