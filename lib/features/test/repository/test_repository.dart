@@ -48,7 +48,7 @@ List<GraphTest> questions = [
       '10', // Correct answer
       '19',
       '7',
-      '2'
+      '2',
       'I have no idea',
     ],
   ),
