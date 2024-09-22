@@ -7,4 +7,6 @@ class SidebarCubit extends Cubit<SidebarState> {
   SidebarCubit(super.initialState);
 
   void toggle({required bool isOpen}) => emit(SidebarState(isOpen: isOpen));
+
+  void filter({required String query}) => emit(SidebarState(isOpen: state.isOpen, query: query));
 }
