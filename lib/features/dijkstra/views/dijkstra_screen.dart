@@ -10,6 +10,7 @@ import 'package:algorithm_visualizer/features/dijkstra/bloc/graph_bloc.dart';
 import 'package:algorithm_visualizer/features/dijkstra/cubit/tool_selection_cubit.dart';
 import 'package:algorithm_visualizer/features/dijkstra/models/edge.dart';
 import 'package:algorithm_visualizer/features/dijkstra/models/vertex.dart';
+import 'package:algorithm_visualizer/features/dijkstra/widgets/pseudocode.dart';
 import 'package:algorithm_visualizer/features/dijkstra/widgets/visualization_info.dart';
 import 'package:algorithm_visualizer/features/dijkstra/widgets/edge_weight_text_field.dart';
 import 'package:algorithm_visualizer/features/dijkstra/widgets/visualization_state_table.dart';
@@ -366,19 +367,13 @@ class DijkstraCanvas extends StatelessWidget {
                   ),
                 ),
 
-                // Displays a table that shows the current state of the algorithm
+                // Displays a table that shows the current state of the algorithm or the pseudo code
                 Visibility(
                   visible: context.watch<AnimationBloc>().state.isRunning,
                   child: const Positioned(
                     right: 8.0,
                     top: 30.0,
-                    child: SizedBox(
-                      width: 250.0,
-                      height: 600.0,
-                      child: SingleChildScrollView(
-                        child: VisualizationStateTable(),
-                      ),
-                    ),
+                    child: Info(),
                   ),
                 ),
 
@@ -518,6 +513,64 @@ class _AnimationControlsState extends State<AnimationControls> {
           },
           icon: const Icon(Icons.skip_next_outlined),
         ),
+      ],
+    );
+  }
+}
+
+class Info extends StatefulWidget {
+  const Info({super.key});
+
+  @override
+  State<Info> createState() => _InfoState();
+}
+
+class _InfoState extends State<Info> {
+  Set<String> _selected = {'Table'};
+
+  @override
+  Widget build(BuildContext context) {
+
+    // Displays a table that shows the current state of the algorithm
+    Widget child = const SizedBox(
+      width: 250.0,
+      height: 600.0,
+      child: SingleChildScrollView(
+        child: VisualizationStateTable(),
+      ),
+    );
+
+    if (_selected.contains('Code')) {
+      // Display pseudo code for the algorithm
+      child = const Pseudocode();
+    }
+
+    return Column(
+      children: [
+        SegmentedButton(
+          segments: const <ButtonSegment<String>>[
+            ButtonSegment<String>(
+              value: 'Table',
+              label: Text('Table'),
+              icon: Icon(Icons.table_chart_outlined),
+            ),
+            ButtonSegment<String>(
+              value: 'Code',
+              label: Text('Code'),
+              icon: Icon(Icons.code_off_outlined),
+            ),
+          ],
+          selected: _selected,
+          onSelectionChanged: (value) {
+            setState(() {
+              _selected = value;
+            });
+          },
+        ),
+
+        const SizedBox(height: 8.0),
+
+        child,
       ],
     );
   }
